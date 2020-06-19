@@ -23,37 +23,43 @@ module.exports = {
           const newUser = {
             name: user.name,
             email: user.email,
-            password: hash
+            password: hash,
           };
           return knex("users").insert(newUser, "*");
         });
       })
-      .then(result => {
+      .then((result) => {
         res.status(201).json({ message: "user created", userId: result.id });
       })
-      .catch(err => {
+      .catch((err) => {
         this.logger.logError(err, "registerUser");
       });
   },
 
   login(req, res, next) {
-    const email = req.body.email;
+    const userName = req.body.user;
     const password = req.body.password;
     let loadedUser;
+
+    console.log(userName, password, "valores");
+    
     knex("users")
-      .where("email", email)
+      .select("user", "password")
+      .where("user", userName)
       .first()
-      .then(user => {
+      .then((user) => {
         if (!user) {
           const error = new Error("A user with this email could not be found.");
           error.statusCode = 401;
           throw error;
         }
         loadedUser = user;
-        console.log(loadedUser);
-        return bcrypt.compare(password, user.password);
+        console.log(loadedUser, "user");
+        var hash = user.password;
+        hash = hash.replace(/^\$2y(.+)$/i, "$2a$1");
+        return bcrypt.compare(password, hash);
       })
-      .then(isEqual => {
+      .then((isEqual) => {
         if (!isEqual) {
           const error = new Error("Wrong password!");
           error.statusCode = 401;
@@ -62,14 +68,15 @@ module.exports = {
         const token = jwt.sign(
           {
             email: loadedUser.email,
-            userId: loadedUser.id
+            userId: loadedUser.id,
           },
           "somesupersecretsecret",
           { expiresIn: "3h" }
         );
+        console.log(token, "token");
         res.status(200).json({ token: token, user: loadedUser });
       })
-      .catch(err => {
+      .catch((err) => {
         if (!err.statusCode) {
           err.statusCode = 500;
         }
@@ -85,14 +92,14 @@ module.exports = {
       return res.status(401).json({ message: "Must pass token" });
     }
     // Check token that was passed by decoding token using secret
-    jwt.verify(token, "somesupersecretsecret", function(err, user) {
+    jwt.verify(token, "somesupersecretsecret", function (err, user) {
       if (err) throw err;
       console.log(user.userId);
       //return user using the id from w/in JWTToken
       knex("users")
         .where("id", user.userId)
         .first()
-        .then(response => {
+        .then((response) => {
           console.log(response);
           // user = utils.getCleanUser(user);
           //Note: you can renew token by creating new token(i.e.
@@ -101,7 +108,7 @@ module.exports = {
           // var token = utils.generateToken(user);
           res.json({
             user: response,
-            token: token
+            token: token,
           });
         });
     });
@@ -131,19 +138,17 @@ module.exports = {
             password: hash,
             image: user.image,
             description: user.description,
-            country: user.country
+            country: user.country,
           };
-          return knex("users")
-            .where("id", id)
-            .update(newUser, "*");
+          return knex("users").where("id", id).update(newUser, "*");
         });
       })
-      .catch(err => {
+      .catch((err) => {
         this.logger.logError(err, "registerUser");
       });
   },
 
   getAll() {
     return knex("users");
-  }
+  },
 };
