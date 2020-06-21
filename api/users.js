@@ -25,7 +25,8 @@ router.post("/upDate/:id", (req, res) => {
   });
 });
 
-router.get("/login", (req, res, next) => {
+router.post("/login", (req, res, next) => {
+  console.log(req.body.user, "user");
   const userName = req.body.user;
   const password = req.body.password;
   let loadedUser;
