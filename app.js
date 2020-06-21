@@ -21,6 +21,7 @@ const app = express();
 app.use(cors(corsOptions));
 
 const users = require("./api/users");
+const centers = require("./api/centers");
 // view engine setup
 
 app.use(logger("dev"));
@@ -29,6 +30,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.use("/api/users", users);
+app.use("/api/centers", centers);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

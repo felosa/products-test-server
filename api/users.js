@@ -1,30 +1,57 @@
 const express = require("express");
+const { query,
+  validationResult,
+  matchedData,
+  param,
+  body } = require("express-validator") ;
 const knex = require("../db/knex"); //the connection
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 
-const queries = require("../db/userqueries");
+// CREAR USER
+router.post("/", [body("user"), body("password")], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() });
+  }
 
-router.get("/", (req, res) => {
-  queries.getAll().then((users) => {
-    res.json(users);
+  const data = matchedData(req, { includeOptionals: true });
+
+  console.log(data, "user");
+  bcrypt.genSalt(10).then((salt, err) => {
+    if (err) {
+      this.logger.logError(err, "registerUser");
+
+      reject(err);
+    }
+
+    bcrypt.hash(data.password, salt).then((hash, err) => {
+      if (err) {
+        this.logger.logError(err, "registerUser");
+
+        reject(err);
+      }
+
+      knex("users")
+        .insert({
+          user: data.user,
+          password: hash,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .then(([newID]) => {
+          return res.json({ newID });
+        })
+        .catch((err) => {
+          return res.status(500).send(err);
+        });
+    });
   });
 });
 
-router.post("/signUp", (req, res) => {
-  queries.create(req.body).then((user) => {
-    res.json("Introducido");
-  });
-});
-
-router.post("/upDate/:id", (req, res) => {
-  queries.updateUser(req.params.id, req.body).then((user) => {
-    res.json("Introducido");
-  });
-});
-
+// LOGUEAR USUARIO
 router.post("/login", (req, res, next) => {
   console.log(req.body.user, "user");
   const userName = req.body.user;
@@ -74,7 +101,33 @@ router.post("/login", (req, res, next) => {
     });
 });
 
+// COMPROBAR SI EL USUARIO ESTA LOGUEADO(REVISAR SI SE USA TOKEN O ALGO MAS)
 router.get("/isLoged/:token", (req, res, next) => {
-  queries.isLoged(req, res, next);
+  // check header or url parameters or post parameters for token
+  var token = req.params.token || req.query.token;
+  if (!token) {
+    return res.status(401).json({ message: "Must pass token" });
+  }
+  // Check token that was passed by decoding token using secret
+  jwt.verify(token, "somesupersecretsecret", function (err, user) {
+    if (err) throw err;
+    console.log(user.userId);
+    //return user using the id from w/in JWTToken
+    knex("users")
+      .where("id", user.userId)
+      .first()
+      .then((response) => {
+        console.log(response);
+        // user = utils.getCleanUser(user);
+        //Note: you can renew token by creating new token(i.e.
+        //refresh it)w/ new expiration time at this point, but I’m
+        //passing the old token back.
+        // var token = utils.generateToken(user);
+        res.json({
+          user: response,
+          token: token,
+        });
+      });
+  });
 });
 module.exports = router;
