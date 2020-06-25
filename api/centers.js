@@ -128,6 +128,7 @@ router.post(
   "/",
   [
     body("name"),
+    body("email"),
     body("minPrice"),
     body("maxPrice"),
     body("denomination"),
@@ -165,44 +166,74 @@ router.post(
           reject(err);
         }
 
-        knex("centers").insert({
-          name: data.name,
-          minPrice: data.minPrice,
-          maxPrice: data.maxPrice,
-          denomination: data.denomination,
-          adress: data.adress,
-          postalCode: data.postalCode,
-          city: data.city,
-          master: data.master,
-          masterDNI: data.masterDNI,
-          cif: data.cif,
-          provinceNumber: data.provinceNumber,
-          sectionNumber: data.sectionNumber,
-          controlDigit: data.controlDigit,
-          created_at: new Date(),
-          updated_at: new Date(),
-        });
-        knex("users").insert({
-          user: data.user,
-          minPrice: data.hash,
-          created_at: new Date(),
-          updated_at: new Date(),
+        var centerQuery = new Promise((resolve) => {
+          knex("centers")
+            .insert({
+              name: data.name,
+              minPrice: data.minPrice,
+              maxPrice: data.maxPrice,
+              denomination: data.denomination,
+              adress: data.adress,
+              postalCode: data.postalCode,
+              city: data.city,
+              master: data.master,
+              masterDNI: data.masterDNI,
+              cif: data.cif,
+              provinceNumber: data.provinceNumber,
+              sectionNumber: data.sectionNumber,
+              controlDigit: data.controlDigit,
+              created_at: new Date(),
+              updated_at: new Date(),
+            })
+            .then((centerID) => {
+              console.log(centerID, "id del centro");
+              resolve(centerID);
+            })
+            .catch((error) => {
+              console.log("no lo ha guardado por fallo del center");
+              resolve();
+            });
         });
 
-        // Cuando las anteriores se han creado, meter el id del usuario en idUser, y el id del centro en idEntity
-        knex("user_rols").insert({
-          idUser: "idUser", // falta conseguir este dato
-          idEntity: "idCenter", // falta conseguir este dato
-          role: "ROLE_CENTER",
-          created_at: new Date(),
-          updated_at: new Date(),
+        console.log(hash, "contrasena");
+
+        var userQuery = new Promise((resolve) => {
+          knex("users")
+            .insert({
+              user: data.email,
+              password: hash,
+              created_at: new Date(),
+              updated_at: new Date(),
+            })
+            .then((userID) => {
+              console.log(userID, "id del user");
+              resolve(userID);
+            })
+            .catch((error) => {
+              console.log("no lo ha guardado por fallo del user");
+              resolve();
+            });
         });
-        // .then(([newID]) => {
-        //   return res.json({ newID });
-        // })
-        // .catch((err) => {
-        //   return res.status(500).send(err);
-        // });
+        console.log(userQuery, "userQuery");
+        // Cuando las anteriores se han creado, meter el id del usuario en idUser, y el id del centro en idEntity
+
+        return Promise.all([centerQuery, userQuery]).then((results) => {
+          console.log(results, "resultados finales");
+
+          knex("user_rols")
+            .insert({
+              idUser: results[1], // falta conseguir este dato
+              idEntity: results[0], // falta conseguir este dato
+              role: "ROLE_CENTER",
+              created_at: new Date(),
+              updated_at: new Date(),
+            })
+            .then((response) => {
+              return res.json({
+                results: response,
+              });
+            });
+        });
       });
     });
   }
@@ -214,6 +245,7 @@ router.post(
   [
     param("ID").isInt().toInt(),
     body("name"),
+    body("email"),
     body("minPrice"),
     body("maxPrice"),
     body("denomination"),
@@ -227,6 +259,7 @@ router.post(
     body("sectionNumber"),
     body("controlDigit"),
     body("password"),
+    body("identityID"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -236,33 +269,129 @@ router.post(
 
     const data = matchedData(req, { includeOptionals: true });
 
-    knex("centers")
-      .update({
-        name: data.name,
-        minPrice: data.minPrice,
-        maxPrice: data.maxPrice,
-        denomination: data.denomination,
-        adress: data.adress,
-        postalCode: data.postalCode,
-        city: data.city,
-        master: data.master,
-        masterDNI: data.masterDNI,
-        cif: data.cif,
-        provinceNumber: data.provinceNumber,
-        sectionNumber: data.sectionNumber,
-        controlDigit: data.controlDigit,
-        updated_at: new Date(),
-      })
-      .where("id", data.ID)
-      .then((result) => {
-        if (result > 0) {
-          return res.send("Updated");
+    if (data.password) {
+      bcrypt.genSalt(10).then((salt, err) => {
+        if (err) {
+          this.logger.logError(err, "registerUser");
+
+          reject(err);
         }
-        return res.status(404).send("Not found");
-      })
-      .catch((err) => {
-        return res.status(500).send(err);
+
+        bcrypt.hash(data.password, salt).then((hash, err) => {
+          if (err) {
+            this.logger.logError(err, "registerUser");
+
+            reject(err);
+          }
+
+          var centerQuery = new Promise((resolve) => {
+            knex("centers")
+              .update({
+              name: data.name,
+              minPrice: data.minPrice,
+              maxPrice: data.maxPrice,
+              denomination: data.denomination,
+              adress: data.adress,
+              postalCode: data.postalCode,
+              city: data.city,
+              master: data.master,
+              masterDNI: data.masterDNI,
+              cif: data.cif,
+              provinceNumber: data.provinceNumber,
+              sectionNumber: data.sectionNumber,
+              controlDigit: data.controlDigit,
+              updated_at: new Date(),
+              })
+              .where("id", data.ID)
+              .then((result) => {
+                if (result > 0) {
+                  return res.send("Updated");
+                }
+                return res.status(404).send("Not found");
+              })
+              .catch((err) => {
+                return res.status(500).send(err);
+              });
+          });
+
+          var userQuery = new Promise((resolve) => {
+            knex("users")
+              .update({
+                // pasar para el user a coger la inicial del nombre y el priemr apellido
+                user: data.email,
+                password: hash,
+                created_at: new Date(),
+                updated_at: new Date(),
+              })
+              .where("id", data.identityID)
+              .then((userID) => {
+                console.log(userID, "id del user");
+                resolve(userID);
+              })
+              .catch((error) => {
+                console.log("no lo ha guardado por fallo del user");
+                resolve();
+              });
+          });
+        });
       });
+    } else {
+      var centerQuery = new Promise((resolve) => {
+        knex("centers")
+          .update({
+            name: data.name,
+              minPrice: data.minPrice,
+              maxPrice: data.maxPrice,
+              denomination: data.denomination,
+              adress: data.adress,
+              postalCode: data.postalCode,
+              city: data.city,
+              master: data.master,
+              masterDNI: data.masterDNI,
+              cif: data.cif,
+              provinceNumber: data.provinceNumber,
+              sectionNumber: data.sectionNumber,
+              controlDigit: data.controlDigit,
+              updated_at: new Date(),
+          })
+          .where("id", data.ID)
+          .then((result) => {
+            if (result > 0) {
+              return res.send("Updated");
+            }
+            return res.status(404).send("Not found");
+          })
+          .catch((err) => {
+            return res.status(500).send(err);
+          });
+      });
+
+      var userQuery = new Promise((resolve) => {
+        knex("users")
+          .update({
+            user: data.email,
+            created_at: new Date(),
+            updated_at: new Date(),
+          })
+          .where("id", data.identityID)
+          .then((userID) => {
+            console.log(userID, "id del user");
+            resolve(userID);
+          })
+          .catch((error) => {
+            console.log("no lo ha guardado por fallo del user");
+            resolve();
+          });
+      });
+    }
+
+
+    return Promise.all([centerQuery, userQuery]).then((results) => {
+      console.log(results, "resultados finales");
+      return res.json({
+        results: results,
+      });
+    });
   }
 );
 
