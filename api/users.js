@@ -1,9 +1,11 @@
 const express = require("express");
-const { query,
+const {
+  query,
   validationResult,
   matchedData,
   param,
-  body } = require("express-validator") ;
+  body,
+} = require("express-validator");
 const knex = require("../db/knex"); //the connection
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -61,7 +63,8 @@ router.post("/login", (req, res, next) => {
   console.log(userName, password, "valores");
 
   knex("users")
-    .select("user", "password")
+    .leftJoin("user_rols", "user_rols.idUser", "users.id")
+    .select("users.id", "user", "password", "user_rols.role")
     .where("user", userName)
     .first()
     .then((user) => {

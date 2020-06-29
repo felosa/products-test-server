@@ -150,7 +150,6 @@ router.post(
     }
 
     const data = matchedData(req, { includeOptionals: true });
-
     console.log(data, "center");
     bcrypt.genSalt(10).then((salt, err) => {
       if (err) {
@@ -266,7 +265,8 @@ router.post(
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
     }
-
+    // ID = id del center en la tabla centers
+    // identityID = id que tiene el center en la tabla user
     const data = matchedData(req, { includeOptionals: true });
 
     if (data.password) {
@@ -287,20 +287,20 @@ router.post(
           var centerQuery = new Promise((resolve) => {
             knex("centers")
               .update({
-              name: data.name,
-              minPrice: data.minPrice,
-              maxPrice: data.maxPrice,
-              denomination: data.denomination,
-              adress: data.adress,
-              postalCode: data.postalCode,
-              city: data.city,
-              master: data.master,
-              masterDNI: data.masterDNI,
-              cif: data.cif,
-              provinceNumber: data.provinceNumber,
-              sectionNumber: data.sectionNumber,
-              controlDigit: data.controlDigit,
-              updated_at: new Date(),
+                name: data.name,
+                minPrice: data.minPrice,
+                maxPrice: data.maxPrice,
+                denomination: data.denomination,
+                adress: data.adress,
+                postalCode: data.postalCode,
+                city: data.city,
+                master: data.master,
+                masterDNI: data.masterDNI,
+                cif: data.cif,
+                provinceNumber: data.provinceNumber,
+                sectionNumber: data.sectionNumber,
+                controlDigit: data.controlDigit,
+                updated_at: new Date(),
               })
               .where("id", data.ID)
               .then((result) => {
@@ -340,19 +340,19 @@ router.post(
         knex("centers")
           .update({
             name: data.name,
-              minPrice: data.minPrice,
-              maxPrice: data.maxPrice,
-              denomination: data.denomination,
-              adress: data.adress,
-              postalCode: data.postalCode,
-              city: data.city,
-              master: data.master,
-              masterDNI: data.masterDNI,
-              cif: data.cif,
-              provinceNumber: data.provinceNumber,
-              sectionNumber: data.sectionNumber,
-              controlDigit: data.controlDigit,
-              updated_at: new Date(),
+            minPrice: data.minPrice,
+            maxPrice: data.maxPrice,
+            denomination: data.denomination,
+            adress: data.adress,
+            postalCode: data.postalCode,
+            city: data.city,
+            master: data.master,
+            masterDNI: data.masterDNI,
+            cif: data.cif,
+            provinceNumber: data.provinceNumber,
+            sectionNumber: data.sectionNumber,
+            controlDigit: data.controlDigit,
+            updated_at: new Date(),
           })
           .where("id", data.ID)
           .then((result) => {
@@ -384,7 +384,6 @@ router.post(
           });
       });
     }
-
 
     return Promise.all([centerQuery, userQuery]).then((results) => {
       console.log(results, "resultados finales");

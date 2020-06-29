@@ -7,8 +7,6 @@ const {
   body,
 } = require("express-validator");
 const knex = require("../db/knex"); //the connection
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 
@@ -100,7 +98,7 @@ router.post(
 
     knex("vehicles")
       .insert({
-        enrollment: data.enrollment,
+        enrollment: data.enrollment.toUpperCase(),
         description: data.description,
         itvDueDate: data.itvDueDate,
         insuranceDueDate: data.insuranceDueDate,
@@ -140,7 +138,7 @@ router.post(
 
     knex("vehicles")
       .update({
-        enrollment: data.enrollment,
+        enrollment: data.enrollment.toUpperCase(),
         description: data.description,
         itvDueDate: data.itvDueDate,
         insuranceDueDate: data.insuranceDueDate,
@@ -161,5 +159,31 @@ router.post(
       })
   }
 );
+
+
+// DELETE
+router.delete("/:ID", [param("ID").isInt().toInt()], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() });
+  }
+
+  const { ID } = matchedData(req, { includeOptionals: true });
+
+  knex("vehicles")
+    .where({
+      id: ID,
+    })
+    .del()
+    .then((value) => {
+      if (value > 0) {
+        return res.send("OK");
+      }
+      return res.status(404).send("Not found");
+    })
+    .catch((error) => {
+      return res.status(500).send(error);
+    });
+});
 
 module.exports = router;

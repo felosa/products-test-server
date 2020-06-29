@@ -223,25 +223,25 @@ router.post(
           knex("students")
             .insert({
               registerNumber: data.registerNumber,
-              dni: data.dni,
+              dni: data.dni.toUpperCase(),
               dniExpiration: data.dniExpiration,
-              firstName: data.firstName,
-              LastName1: data.LastName1,
-              LastName2: data.LastName2,
+              firstName: data.firstName.toUpperCase(),
+              LastName1: data.LastName1.toUpperCase(),
+              LastName2: data.LastName2.toUpperCase(),
               email: data.email,
               phone: data.phone,
               gender: data.gender,
-              wayType: data.wayType,
-              wayName: data.wayName,
-              wayNumber: data.wayNumber,
-              block: data.block,
-              floor: data.floor,
-              door: data.door,
-              postalCode: data.postalCode,
-              city: data.city,
-              province: data.province,
-              nationality: data.nationality,
-              countryBirth: data.countryBirth,
+              wayType: data.wayType.toUpperCase(),
+              wayName: data.wayName.toUpperCase(),
+              wayNumber: data.wayNumber.toUpperCase(),
+              block: data.block.toUpperCase(),
+              floor: data.floor.toUpperCase(),
+              door: data.door.toUpperCase(),
+              postalCode: data.postalCode.toUpperCase(),
+              city: data.city.toUpperCase(),
+              province: data.province.toUpperCase(),
+              nationality: data.nationality.toUpperCase(),
+              countryBirth: data.countryBirth.toUpperCase(),
               birthday: data.birthday,
               medicalExamination: data.medicalExamination,
               how: data.how,
@@ -346,7 +346,8 @@ router.post(
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
     }
-
+    // ID = id del estudiante en la tabla estudiantes
+    // identityID = id que tiene el estudiante en la tabla user
     const data = matchedData(req, { includeOptionals: true });
 
     if (data.dni) {
@@ -368,25 +369,25 @@ router.post(
             knex("students")
               .update({
                 registerNumber: data.registerNumber,
-                dni: data.dni,
+                dni: data.dni.toUpperCase(),
                 dniExpiration: data.dniExpiration,
-                firstName: data.firstName,
-                LastName1: data.LastName1,
-                LastName2: data.LastName2,
+                firstName: data.firstName.toUpperCase(),
+                LastName1: data.LastName1.toUpperCase(),
+                LastName2: data.LastName2.toUpperCase(),
                 email: data.email,
                 phone: data.phone,
                 gender: data.gender,
-                wayType: data.wayType,
-                wayName: data.wayName,
-                wayNumber: data.wayNumber,
-                block: data.block,
-                floor: data.floor,
-                door: data.door,
-                postalCode: data.postalCode,
-                city: data.city,
-                province: data.province,
-                nationality: data.nationality,
-                countryBirth: data.countryBirth,
+                wayType: data.wayType.toUpperCase(),
+                wayName: data.wayName.toUpperCase(),
+                wayNumber: data.wayNumber.toUpperCase(),
+                block: data.block.toUpperCase(),
+                floor: data.floor.toUpperCase(),
+                door: data.door.toUpperCase(),
+                postalCode: data.postalCode.toUpperCase(),
+                city: data.city.toUpperCase(),
+                province: data.province.toUpperCase(),
+                nationality: data.nationality.toUpperCase(),
+                countryBirth: data.countryBirth.toUpperCase(),
                 birthday: data.birthday,
                 medicalExamination: data.medicalExamination,
                 how: data.how,
@@ -493,7 +494,6 @@ router.post(
           });
       });
     }
-
 
     return Promise.all([studentQuery, userQuery]).then((results) => {
       console.log(results, "resultados finales");

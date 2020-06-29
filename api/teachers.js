@@ -232,6 +232,9 @@ router.post(
       return res.status(422).json({ errors: errors.array() });
     }
 
+    // ID = id del profesor en la tabla teachers
+    // identityID = id que tiene el profesor en la tabla user
+
     const data = matchedData(req, { includeOptionals: true });
 
     if (data.dni) {
@@ -252,10 +255,10 @@ router.post(
           var teacherQuery = new Promise((resolve) => {
             knex("teachers")
               .update({
-                firstName: data.firstName,
-                lastName1: data.lastName1,
-                lastName2: data.lastName2,
-                dni: data.dni,
+                firstName: data.firstName.toUpperCase(),
+                lastName1: data.lastName1.toUpperCase(),
+                lastName2: data.lastName2.toUpperCase(),
+                dni: data.dni.toUpperCase(),
                 phone: data.phone,
                 email: data.email,
                 birthday: data.birthday,
@@ -301,10 +304,10 @@ router.post(
       var teacherQuery = new Promise((resolve) => {
         knex("teachers")
           .update({
-            firstName: data.firstName,
-              lastName1: data.lastName1,
-              lastName2: data.lastName2,
-              dni: data.dni,
+            firstName: data.firstName.toUpperCase(),
+              lastName1: data.lastName1.toUpperCase(),
+              lastName2: data.lastName2.toUpperCase(),
+              dni: data.dni.toUpperCase(),
               phone: data.phone,
               email: data.email,
               birthday: data.birthday,
