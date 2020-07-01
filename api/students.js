@@ -223,25 +223,25 @@ router.post(
           knex("students")
             .insert({
               registerNumber: data.registerNumber,
-              dni: data.dni.toUpperCase(),
+              dni: data.dni,
               dniExpiration: data.dniExpiration,
-              firstName: data.firstName.toUpperCase(),
-              LastName1: data.LastName1.toUpperCase(),
-              LastName2: data.LastName2.toUpperCase(),
+              firstName: data.firstName,
+              LastName1: data.LastName1,
+              LastName2: data.LastName2,
               email: data.email,
               phone: data.phone,
               gender: data.gender,
-              wayType: data.wayType.toUpperCase(),
-              wayName: data.wayName.toUpperCase(),
-              wayNumber: data.wayNumber.toUpperCase(),
-              block: data.block.toUpperCase(),
-              floor: data.floor.toUpperCase(),
-              door: data.door.toUpperCase(),
-              postalCode: data.postalCode.toUpperCase(),
-              city: data.city.toUpperCase(),
-              province: data.province.toUpperCase(),
-              nationality: data.nationality.toUpperCase(),
-              countryBirth: data.countryBirth.toUpperCase(),
+              wayType: data.wayType,
+              wayName: data.wayName,
+              wayNumber: data.wayNumber,
+              block: data.block,
+              floor: data.floor,
+              door: data.door,
+              postalCode: data.postalCode,
+              city: data.city,
+              province: data.province,
+              nationality: data.nationality,
+              countryBirth: data.countryBirth,
               birthday: data.birthday,
               medicalExamination: data.medicalExamination,
               how: data.how,
@@ -339,7 +339,7 @@ router.post(
     body("firstContact"),
     body("recieveNotifications"),
     body("active"),
-    body("identityID"),
+    body("rol"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -349,7 +349,7 @@ router.post(
     // ID = id del estudiante en la tabla estudiantes
     // identityID = id que tiene el estudiante en la tabla user
     const data = matchedData(req, { includeOptionals: true });
-
+    data.identityID = data.rol.idUser;
     if (data.dni) {
       bcrypt.genSalt(10).then((salt, err) => {
         if (err) {
@@ -369,25 +369,25 @@ router.post(
             knex("students")
               .update({
                 registerNumber: data.registerNumber,
-                dni: data.dni.toUpperCase(),
+                dni: data.dni,
                 dniExpiration: data.dniExpiration,
-                firstName: data.firstName.toUpperCase(),
-                LastName1: data.LastName1.toUpperCase(),
-                LastName2: data.LastName2.toUpperCase(),
+                firstName: data.firstName,
+                LastName1: data.LastName1,
+                LastName2: data.LastName2,
                 email: data.email,
                 phone: data.phone,
                 gender: data.gender,
-                wayType: data.wayType.toUpperCase(),
-                wayName: data.wayName.toUpperCase(),
-                wayNumber: data.wayNumber.toUpperCase(),
-                block: data.block.toUpperCase(),
-                floor: data.floor.toUpperCase(),
-                door: data.door.toUpperCase(),
-                postalCode: data.postalCode.toUpperCase(),
-                city: data.city.toUpperCase(),
-                province: data.province.toUpperCase(),
-                nationality: data.nationality.toUpperCase(),
-                countryBirth: data.countryBirth.toUpperCase(),
+                wayType: data.wayType,
+                wayName: data.wayName,
+                wayNumber: data.wayNumber,
+                block: data.block,
+                floor: data.floor,
+                door: data.door,
+                postalCode: data.postalCode,
+                city: data.city,
+                province: data.province,
+                nationality: data.nationality,
+                countryBirth: data.countryBirth,
                 birthday: data.birthday,
                 medicalExamination: data.medicalExamination,
                 how: data.how,
@@ -400,7 +400,7 @@ router.post(
               .where("id", data.ID)
               .then((result) => {
                 if (result > 0) {
-                  return res.send("Updated");
+                  resolve(result);
                 }
                 return res.status(404).send("Not found");
               })
@@ -466,7 +466,7 @@ router.post(
           .where("id", data.ID)
           .then((result) => {
             if (result > 0) {
-              return res.send("Updated");
+              resolve(result);
             }
             return res.status(404).send("Not found");
           })
@@ -513,7 +513,7 @@ router.delete("/:ID", [param("ID").isInt().toInt()], (req, res) => {
 
   const { ID } = matchedData(req, { includeOptionals: true });
 
-  knex("centers")
+  knex("students")
     .where({
       id: ID,
     })

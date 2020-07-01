@@ -98,7 +98,7 @@ router.post(
 
     knex("vehicles")
       .insert({
-        enrollment: data.enrollment.toUpperCase(),
+        enrollment: data.enrollment,
         description: data.description,
         itvDueDate: data.itvDueDate,
         insuranceDueDate: data.insuranceDueDate,
@@ -138,7 +138,7 @@ router.post(
 
     knex("vehicles")
       .update({
-        enrollment: data.enrollment.toUpperCase(),
+        enrollment: data.enrollment,
         description: data.description,
         itvDueDate: data.itvDueDate,
         insuranceDueDate: data.insuranceDueDate,
