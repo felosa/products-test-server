@@ -16,10 +16,63 @@ const router = express.Router();
 // GET ALL
 router.get(
   "/",
+  [
+    query("centerID").optional(),
+    query("search").optional(),
+    query("orderBy").optional({ nullable: true }),
+    query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
+    query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
+    query("page").isInt({ min: 1 }).toInt().optional(),
+    // query("firstName").optional(),
+    // query("lastName").optional(),
+    // query("jobTitle").optional(),
+    // query("companyName").optional(),
+    // query("countryName").optional(),
+    // query("countryID").optional(),
+    // query("regionName").optional(),
+    // query("regionID").optional(),
+  ],
   // defaultGetValidators,
-  (req, res) => {
+  async (req, res) => {
     // HABRA QUE ANADIR FILTROS PARA FILTRAR POR CENTRO O SACAR TODOS
-    const query = knex("students")
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    var {
+      centerID = null,
+      orderBy = null,
+      orderDir = null,
+      perPage = 10,
+      page = 1,
+      // firstName = null,
+      // lastName = null,
+      // jobTitle = null,
+      // companyName = null,
+      // countryName = null,
+      // countryID = null,
+      // regionName = null,
+      // regionID = null,
+    } = req.query;
+    console.log(centerID, "centerID");
+    
+    var getQuery = knex.table("students");
+
+    if (centerID) {
+      getQuery.where("students.idCenter", centerID);
+    }
+
+    var totalCount = await getQuery
+      .clone()
+      .count("*", { as: "totalResults" })
+      .limit(999999)
+      .offset(0);
+
+    var results = await getQuery
+      .limit(perPage)
+      .offset((page - 1) * perPage)
       .leftJoin("centers", "centers.id", "students.idCenter")
       .select(
         "students.id",
@@ -59,24 +112,14 @@ router.get(
         "students.updated_at",
         "students.idCenter as centerID",
         "centers.name as centerName"
-      )
-      .then((results) => {
-        return res.json({
-          results,
-        });
-      })
-      .catch((error) => res.status(500).send(JSON.stringify(error)));
+      );
 
-    // return Promise.all([query, countQuery])
-    //   .then(([results, count]) => {
-    //     return res.json({
-    //       page: criteria.page || 1,
-    //       perPage: criteria.perPage || 10,
-    //       totalResults: count.totalResults,
-    //       results,
-    //     });
-    //   })
-    //   .catch((error) => res.status(500).send(JSON.stringify(error)));
+    return res.json({
+      page: page || 1,
+      perPage: perPage || 10,
+      totalCount: totalCount[0].totalResults,
+      results: results,
+    });
   }
 );
 
@@ -89,7 +132,7 @@ router.get(
     try {
       const { studentID } = matchedData(req);
       console.log(studentID, "req");
-      var studentQuery = knex("students")
+      const studentQuery = knex("students")
         .leftJoin("centers", "centers.id", "students.idCenter")
         .select(
           "students.id",
@@ -167,13 +210,13 @@ router.get(
 router.post(
   "/",
   [
-    body("idCenter"),
+    body("idCenter").toInt(),
     body("registerNumber"),
     body("dni"),
     body("dniExpiration"),
     body("firstName"),
-    body("LastName1"),
-    body("LastName2"),
+    body("lastName1"),
+    body("lastName2"),
     body("email"),
     body("phone"),
     body("gender"),
@@ -195,6 +238,8 @@ router.post(
     body("recieveNotifications"),
     body("active"),
     body("password"),
+    body("permission"),
+    body("idTariff"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -204,7 +249,8 @@ router.post(
 
     const data = matchedData(req, { includeOptionals: true });
 
-    console.log(data, "center");
+    var idStudent;
+
     bcrypt.genSalt(10).then((salt, err) => {
       if (err) {
         this.logger.logError(err, "registerUser");
@@ -212,7 +258,7 @@ router.post(
         reject(err);
       }
 
-      bcrypt.hash(data.dni, salt).then((hash, err) => {
+      bcrypt.hash(data.dni, salt).then(async (hash, err) => {
         if (err) {
           this.logger.logError(err, "registerUser");
 
@@ -222,12 +268,12 @@ router.post(
         var studentQuery = new Promise((resolve) => {
           knex("students")
             .insert({
-              registerNumber: data.registerNumber,
+              registerNumber: 1,
               dni: data.dni,
               dniExpiration: data.dniExpiration,
               firstName: data.firstName,
-              LastName1: data.LastName1,
-              LastName2: data.LastName2,
+              lastName1: data.lastName1,
+              lastName2: data.lastName2,
               email: data.email,
               phone: data.phone,
               gender: data.gender,
@@ -240,19 +286,21 @@ router.post(
               postalCode: data.postalCode,
               city: data.city,
               province: data.province,
-              nationality: data.nationality,
-              countryBirth: data.countryBirth,
-              birthday: data.birthday,
+              nationality: "data.nationality",
+              countryBirth: "data.countryBirth",
+              birthday: "2020-02-02",
               medicalExamination: data.medicalExamination,
-              how: data.how,
-              recieveNotifications: data.recieveNotifications,
+              how: "data.how",
+              recieveNotifications: 1,
               idCenter: data.idCenter,
-              active: data.active,
-              firstContact: data.firstContact,
+              active: 1,
+              firstContact: "a",
+              password: "data.password",
               created_at: new Date(),
               updated_at: new Date(),
             })
             .then((studentID) => {
+              idStudent = studentID;
               console.log(studentID, "id del student");
               resolve(studentID);
             })
@@ -274,7 +322,7 @@ router.post(
               updated_at: new Date(),
             })
             .then((userID) => {
-              console.log(userID, "id del user");
+              console.log(userID, "id del user en user table");
               resolve(userID);
             })
             .catch((error) => {
@@ -282,26 +330,78 @@ router.post(
               resolve();
             });
         });
-        console.log(userQuery, "userQuery");
-        // Cuando las anteriores se han creado, meter el id del usuario en idUser, y el id del centro en idEntity
 
-        return Promise.all([studentQuery, userQuery]).then((results) => {
-          console.log(results, "resultados finales");
-
-          knex("user_rols")
-            .insert({
-              idUser: results[1], // id de Usuario
-              idEntity: results[0], // id de Teacher
-              role: "ROLE_STUDENT",
-              created_at: new Date(),
-              updated_at: new Date(),
-            })
-            .then((response) => {
-              return res.json({
-                results: response,
-              });
-            });
+        var classBagQuery = await knex.table("student_class_bags").insert({
+          idStudent: idStudent,
+          quantity: 0,
         });
+
+        var courseQuery = await knex.table("courses").insert({
+          signUp: data.signUp,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          // logica para felicitationBirthday y las demas que vienen
+          felicitationBirthday: data.birthday,
+          twoMonths: data.birthday,
+          endDateBad: data.birthday,
+          permission: data.permission,
+          idTariff: data.idTariff,
+          practiceSent: 0,
+        });
+
+        const payment1 = await knex
+          .table("payments")
+          .leftJoin("tariffs", "tariffs.id", data.idTariff)
+          .insert({
+            description: "Matrícula",
+            idStudent: idStudent,
+            quantity: tariffs.pvpSignUp,
+            type: "Cargo",
+            paymentType: null,
+            date: new Date(),
+          });
+
+        const payment2 = await knex
+          .table("payments")
+          .leftJoin("tariffs", "tariffs.id", data.idTariff)
+          .insert({
+            description: "Curso Teórico",
+            idStudent: idStudent,
+            quantity: tariffs.pvpCourse,
+            type: "Cargo",
+            paymentType: null,
+            date: new Date(),
+          });
+        // Cuando las anteriores se han creado, meter el id del usuario en idUser, y el id del student(tabla students) en idEntity
+
+        return Promise.all([studentQuery, userQuery])
+          .then((results) => {
+            console.log(results, "resultados finales");
+            let newStudentID = results[0];
+            knex("user_rols")
+              .insert({
+                idUser: results[1], // id de Usuario en user table
+                idEntity: results[0], // id de student en Student table
+                role: "ROLE_STUDENT",
+                created_at: new Date(),
+                updated_at: new Date(),
+              })
+              .then((response) => {
+                return knex("student_class_bags")
+                  .insert({
+                    idStudent: newStudentID,
+                    quantity: 0,
+                    created_at: new Date(),
+                    updated_at: new Date(),
+                  })
+                  .then((response) => {
+                    res.json({
+                      results: response,
+                    });
+                  });
+              });
+          })
+          .catch((error) => console.log("error"));
       });
     });
   }

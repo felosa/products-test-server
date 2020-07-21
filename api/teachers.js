@@ -15,10 +15,62 @@ const router = express.Router();
 // TODOS LOS PROFESORES
 router.get(
   "/",
-  // defaultGetValidators,
-  (req, res) => {
+  [
+    query("centerID").optional(),
+    query("search").optional(),
+    query("orderBy").optional({ nullable: true }),
+    query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
+    query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
+    query("page").isInt({ min: 1 }).toInt().optional(),
+    // query("firstName").optional(),
+    // query("lastName").optional(),
+    // query("jobTitle").optional(),
+    // query("companyName").optional(),
+    // query("countryName").optional(),
+    // query("countryID").optional(),
+    // query("regionName").optional(),
+    // query("regionID").optional(),
+  ],
+  async (req, res) => {
     // HABRA QUE ANADIR FILTROS PARA FILTRAR POR CENTRO O SACAR TODOS
-    const query = knex("teachers")
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    var {
+      centerID = null,
+      orderBy = null,
+      orderDir = null,
+      perPage = 10,
+      page = 1,
+      // firstName = null,
+      // lastName = null,
+      // jobTitle = null,
+      // companyName = null,
+      // countryName = null,
+      // countryID = null,
+      // regionName = null,
+      // regionID = null,
+    } = req.query;
+    console.log(centerID, "centerID");
+
+    var getQuery = knex.table("teachers");
+
+    if (centerID) {
+      getQuery.where("teachers.idCenter", centerID);
+    }
+
+    var totalCount = await getQuery
+      .clone()
+      .count("*", { as: "totalResults" })
+      .limit(999999)
+      .offset(0);
+
+    var results = await getQuery
+      .limit(perPage)
+      .offset((page - 1) * perPage)
       .leftJoin("centers", "centers.id", "teachers.idCenter")
       .select(
         "teachers.id",
@@ -33,16 +85,15 @@ router.get(
         "teachers.updated_at",
         "teachers.idCenter as centerID",
         "centers.name as centerName"
-      )
-      .then((results) => {
-        return res.json({
-          results,
-        });
-      })
-      .catch((error) => res.status(500).send(JSON.stringify(error)));
+      );
+    return res.json({
+      page: page || 1,
+      perPage: perPage || 10,
+      totalCount: totalCount[0].totalResults,
+      results: results,
+    });
   }
 );
-
 
 // GET ONE
 router.get(
@@ -53,21 +104,21 @@ router.get(
       const { teacherID } = matchedData(req);
       console.log(teacherID, "req");
       var teacherQuery = knex("teachers")
-      .leftJoin("centers", "centers.id", "teachers.idCenter")
-      .select(
-        "teachers.id",
-        "teachers.firstName",
-        "teachers.lastName1",
-        "teachers.lastName2",
-        "teachers.dni",
-        "teachers.phone",
-        "teachers.email",
-        "teachers.birthday",
-        "teachers.created_at",
-        "teachers.updated_at",
-        "teachers.idCenter as centerID",
-        "centers.name as centerName"
-      )
+        .leftJoin("centers", "centers.id", "teachers.idCenter")
+        .select(
+          "teachers.id",
+          "teachers.firstName",
+          "teachers.lastName1",
+          "teachers.lastName2",
+          "teachers.dni",
+          "teachers.phone",
+          "teachers.email",
+          "teachers.birthday",
+          "teachers.created_at",
+          "teachers.updated_at",
+          "teachers.idCenter as centerID",
+          "centers.name as centerName"
+        )
         .where("teachers.id", teacherID)
         .first()
         // SELECCIONAR ROL?
@@ -100,7 +151,6 @@ router.get(
     }
   }
 );
-
 
 // CREAR TEACHER
 router.post(
@@ -305,16 +355,16 @@ router.post(
         knex("teachers")
           .update({
             firstName: data.firstName.toUpperCase(),
-              lastName1: data.lastName1.toUpperCase(),
-              lastName2: data.lastName2.toUpperCase(),
-              dni: data.dni.toUpperCase(),
-              phone: data.phone,
-              email: data.email,
-              birthday: data.birthday,
-              password: data.password,
-              teacherSignature: data.teacherSignature,
-              idCenter: data.idCenter,
-              updated_at: new Date(),
+            lastName1: data.lastName1.toUpperCase(),
+            lastName2: data.lastName2.toUpperCase(),
+            dni: data.dni.toUpperCase(),
+            phone: data.phone,
+            email: data.email,
+            birthday: data.birthday,
+            password: data.password,
+            teacherSignature: data.teacherSignature,
+            idCenter: data.idCenter,
+            updated_at: new Date(),
           })
           .where("id", data.ID)
           .then((result) => {
@@ -346,7 +396,6 @@ router.post(
           });
       });
     }
-
 
     return Promise.all([teacherQuery, userQuery]).then((results) => {
       console.log(results, "resultados finales");

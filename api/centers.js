@@ -232,7 +232,7 @@ router.post(
                 results: response,
               });
             });
-        });
+        }).catch(err =>console.log("error"));
       });
     });
   }

@@ -10,13 +10,15 @@ const knex = require("../db/knex"); //the connection
 
 const router = express.Router();
 
-// TODOS LOS PERMISOS
+// TODOS LOS ARQUEOS DE UN CENTRO
 router.get(
-  "/",
+    "/:centerID",
+    [param("centerID").isInt().toInt()],
   // defaultGetValidators,
   (req, res) => {
-    const query = knex("permissions")
-      .select("permissions.id", "permissions.name")
+    const query = knex("archings")
+      .select()
+      .where("idCenter", data.centerID)
       .then((results) => {
         return res.json({
           results,
@@ -26,8 +28,8 @@ router.get(
   }
 );
 
-// CREAR PERMISSION
-router.post("/", [body("name")], async (req, res) => {
+// CREAR ARQUEO HACER DE 0
+router.post("/", [body("name"), body("centerID")], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() });
@@ -35,9 +37,11 @@ router.post("/", [body("name")], async (req, res) => {
 
   const data = matchedData(req, { includeOptionals: true });
 
-  knex("permissions")
+  knex("hows")
     .insert({
       name: data.name.toUpperCase(),
+      idCenter: data.centerID,
+      active: 1,
       created_at: new Date(),
       updated_at: new Date(),
     })
@@ -51,29 +55,5 @@ router.post("/", [body("name")], async (req, res) => {
 
 
 
-// DELETE
-router.delete("/:ID", [param("ID").isInt().toInt()], (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    }
-  
-    const { ID } = matchedData(req, { includeOptionals: true });
-  
-    knex("permissions")
-      .where({
-        id: ID,
-      })
-      .del()
-      .then((value) => {
-        if (value > 0) {
-          return res.send("OK");
-        }
-        return res.status(404).send("Not found");
-      })
-      .catch((error) => {
-        return res.status(500).send(error);
-      });
-  });
 
 module.exports = router;
