@@ -29,6 +29,9 @@ const permissions = require("./api/permissions");
 const archings = require("./api/archings");
 const classTypes = require("./api/classTypes");
 const closures = require("./api/closures");
+const hows = require("./api/hows");
+const tariffs = require("./api/tariffs");
+const exams = require("./api/exams");
 // view engine setup
 
 app.use(logger("dev"));
@@ -45,6 +48,9 @@ app.use("/api/permissions", permissions);
 app.use("/api/archings", archings);
 app.use("/api/classTypes", classTypes);
 app.use("/api/closures", closures);
+app.use("/api/hows", hows);
+app.use("/api/tariffs", tariffs);
+app.use("/api/exams", exams);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

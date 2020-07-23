@@ -86,6 +86,8 @@ router.get(
         "teachers.idCenter as centerID",
         "centers.name as centerName"
       );
+
+      
     return res.json({
       page: page || 1,
       perPage: perPage || 10,

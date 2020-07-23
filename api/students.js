@@ -17,6 +17,7 @@ const router = express.Router();
 router.get(
   "/",
   [
+    query("q").optional(),
     query("centerID").optional(),
     query("search").optional(),
     query("orderBy").optional({ nullable: true }),
@@ -42,6 +43,7 @@ router.get(
     }
 
     var {
+      q = null,
       centerID = null,
       orderBy = null,
       orderDir = null,
@@ -56,12 +58,14 @@ router.get(
       // regionName = null,
       // regionID = null,
     } = req.query;
-    console.log(centerID, "centerID");
-    
+
     var getQuery = knex.table("students");
 
     if (centerID) {
       getQuery.where("students.idCenter", centerID);
+    }
+    if (null !== q) {
+      getQuery.where("students.firstName", "LIKE", `%${q}%`);
     }
 
     var totalCount = await getQuery
