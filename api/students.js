@@ -127,6 +127,211 @@ router.get(
   }
 );
 
+router.get(
+  "/get-exams",
+  [
+    query("studentID").optional(),
+    query("search").optional(),
+    query("orderBy").optional({ nullable: true }),
+    query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
+    query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
+    query("page").isInt({ min: 1 }).toInt().optional(),
+    // query("firstName").optional(),
+    // query("lastName").optional(),
+    // query("jobTitle").optional(),
+    // query("companyName").optional(),
+    // query("countryName").optional(),
+    // query("countryID").optional(),
+    // query("regionName").optional(),
+    // query("regionID").optional(),
+  ],
+  // defaultGetValidators,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const {
+      studentID = null,
+      orderBy = null,
+      orderDir = null,
+      perPage = 10,
+      page = 1,
+      // firstName = null,
+      // lastName = null,
+      // jobTitle = null,
+      // companyName = null,
+      // countryName = null,
+      // countryID = null,
+      // regionName = null,
+      // regionID = null,
+    } = req.query;
+    console.log(studentID, "studentID");
+
+    let getQueryExams = knex
+      .table("student_exams")
+      .where("student_exams.idStudent", studentID);
+
+    var totalCount = await getQueryExams
+      .clone()
+      .count("*", { as: "totalResults" })
+      .limit(999999)
+      .offset(0);
+
+    var results = await getQueryExams
+      .limit(perPage)
+      .offset((page - 1) * perPage)
+      .select()
+      .leftJoin("exams", "exams.id", "student_exams.idExam");
+
+    return res.json({
+      page: page || 1,
+      perPage: perPage || 10,
+      totalCount: totalCount[0].totalResults,
+      results: results,
+    });
+  }
+);
+
+router.get(
+  "/get-practical",
+  [
+    query("studentID").optional(),
+    query("search").optional(),
+    query("orderBy").optional({ nullable: true }),
+    query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
+    query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
+    query("page").isInt({ min: 1 }).toInt().optional(),
+    // query("firstName").optional(),
+    // query("lastName").optional(),
+    // query("jobTitle").optional(),
+    // query("companyName").optional(),
+    // query("countryName").optional(),
+    // query("countryID").optional(),
+    // query("regionName").optional(),
+    // query("regionID").optional(),
+  ],
+  // defaultGetValidators,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const {
+      studentID = null,
+      orderBy = null,
+      orderDir = null,
+      perPage = 10,
+      page = 1,
+      // firstName = null,
+      // lastName = null,
+      // jobTitle = null,
+      // companyName = null,
+      // countryName = null,
+      // countryID = null,
+      // regionName = null,
+      // regionID = null,
+    } = req.query;
+    console.log(studentID, "studentID");
+
+    let getQueryExams = knex
+      .table("generated_classes")
+      .where("generated_classes.idStudent", studentID);
+
+    var totalCount = await getQueryExams
+      .clone()
+      .count("*", { as: "totalResults" })
+      .limit(999999)
+      .offset(0);
+
+    var results = await getQueryExams
+      .limit(perPage)
+      .offset((page - 1) * perPage)
+      .select()
+      .leftJoin("teachers", "teachers.id", "generated_classes.idTeacher")
+      .leftJoin(
+        "practical_classes",
+        "practical_classes.idGeneratedClass",
+        "generated_classes.id"
+      );
+
+    return res.json({
+      page: page || 1,
+      perPage: perPage || 10,
+      totalCount: totalCount[0].totalResults,
+      results: results,
+    });
+  }
+);
+router.get(
+  "/get-payments",
+  [
+    query("studentID").optional(),
+    query("search").optional(),
+    query("orderBy").optional({ nullable: true }),
+    query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
+    query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
+    query("page").isInt({ min: 1 }).toInt().optional(),
+    // query("firstName").optional(),
+    // query("lastName").optional(),
+    // query("jobTitle").optional(),
+    // query("companyName").optional(),
+    // query("countryName").optional(),
+    // query("countryID").optional(),
+    // query("regionName").optional(),
+    // query("regionID").optional(),
+  ],
+  // defaultGetValidators,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const {
+      studentID = null,
+      orderBy = null,
+      orderDir = null,
+      perPage = 10,
+      page = 1,
+      // firstName = null,
+      // lastName = null,
+      // jobTitle = null,
+      // companyName = null,
+      // countryName = null,
+      // countryID = null,
+      // regionName = null,
+      // regionID = null,
+    } = req.query;
+    console.log(studentID, "studentID");
+
+    let getQueryExams = knex
+      .table("payments")
+      .where("payments.idStudent", studentID)
+      .where("payments.active", 1);
+
+    var totalCount = await getQueryExams
+      .clone()
+      .count("*", { as: "totalResults" })
+      .limit(999999)
+      .offset(0);
+
+    var results = await getQueryExams
+      .limit(perPage)
+      .offset((page - 1) * perPage)
+      .select();
+
+    return res.json({
+      page: page || 1,
+      perPage: perPage || 10,
+      totalCount: totalCount[0].totalResults,
+      results: results,
+    });
+  }
+);
+
 // GET ONE
 
 router.get(

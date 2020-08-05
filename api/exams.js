@@ -7,6 +7,7 @@ const {
   body,
 } = require("express-validator");
 const knex = require("../db/knex"); //the connection
+const moment = require("moment");
 
 const router = express.Router();
 
@@ -71,7 +72,6 @@ router.get(
       .leftJoin("centers", "centers.id", "exams.idCenter")
       .select();
 
-
     return res.json({
       page: page || 1,
       perPage: perPage || 10,
@@ -81,30 +81,35 @@ router.get(
   }
 );
 
-// CREAR HOW
-router.post("/", [body("name"), body("centerID")], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() });
+// CREAR EXAM
+router.post(
+  "/",
+  [body("date"), body("type"), body("centerID")],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const data = matchedData(req, { includeOptionals: true });
+    console.log(data, "data");
+    knex("exams")
+      .insert({
+        registerNumber: moment(new Date()).format("YYYYMMDD"),
+        idCenter: data.centerID,
+        type: data.type,
+        date: data.date,
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+      .then(([newID]) => {
+        return res.json({ newID });
+      })
+      .catch((err) => {
+        return res.status(500).send(err);
+      });
   }
-
-  const data = matchedData(req, { includeOptionals: true });
-
-  knex("hows")
-    .insert({
-      name: data.name.toUpperCase(),
-      idCenter: data.centerID,
-      active: 1,
-      created_at: new Date(),
-      updated_at: new Date(),
-    })
-    .then(([newID]) => {
-      return res.json({ newID });
-    })
-    .catch((err) => {
-      return res.status(500).send(err);
-    });
-});
+);
 
 // DISABLE HOW
 router.post("/:ID", [param("ID").isInt().toInt()], async (req, res) => {
