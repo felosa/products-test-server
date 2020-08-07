@@ -13,6 +13,59 @@ const jwt = require("jsonwebtoken");
 const router = express.Router();
 
 router.get(
+  "/get-payments",
+  [
+    query("centerID").optional(),
+    query("search").optional(),
+    query("orderBy").optional({ nullable: true }),
+    query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
+    query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
+    query("page").isInt({ min: 1 }).toInt().optional(),
+  ],
+  // defaultGetValidators,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const {
+      centerID = null,
+      orderBy = null,
+      orderDir = null,
+      perPage = 10,
+      page = 1,
+    } = req.query;
+
+    console.log(centerID, "centerID");
+
+    let getQueryExams = knex
+      .table("payments")
+      .leftJoin("students", "students.id", "payments.idStudent")
+      .where("students.idCenter", centerID)
+      .orderBy("payments.date", "desc");
+
+    var totalCount = await getQueryExams
+      .clone()
+      .count("*", { as: "totalResults" })
+      .limit(999999)
+      .offset(0);
+
+    var results = await getQueryExams
+      .limit(perPage)
+      .offset((page - 1) * perPage)
+      .select();
+
+    return res.json({
+      page: page || 1,
+      perPage: perPage || 10,
+      totalCount: totalCount[0].totalResults,
+      results: results,
+    });
+  }
+);
+
+router.get(
   "/:centerID",
   [param("centerID").isInt().toInt()],
   async (req, res) => {
@@ -216,23 +269,25 @@ router.post(
         console.log(userQuery, "userQuery");
         // Cuando las anteriores se han creado, meter el id del usuario en idUser, y el id del centro en idEntity
 
-        return Promise.all([centerQuery, userQuery]).then((results) => {
-          console.log(results, "resultados finales");
+        return Promise.all([centerQuery, userQuery])
+          .then((results) => {
+            console.log(results, "resultados finales");
 
-          knex("user_rols")
-            .insert({
-              idUser: results[1], // falta conseguir este dato
-              idEntity: results[0], // falta conseguir este dato
-              role: "ROLE_CENTER",
-              created_at: new Date(),
-              updated_at: new Date(),
-            })
-            .then((response) => {
-              return res.json({
-                results: response,
+            knex("user_rols")
+              .insert({
+                idUser: results[1], // falta conseguir este dato
+                idEntity: results[0], // falta conseguir este dato
+                role: "ROLE_CENTER",
+                created_at: new Date(),
+                updated_at: new Date(),
+              })
+              .then((response) => {
+                return res.json({
+                  results: response,
+                });
               });
-            });
-        }).catch(err =>console.log("error"));
+          })
+          .catch((err) => console.log("error"));
       });
     });
   }
