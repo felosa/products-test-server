@@ -59,7 +59,9 @@ router.get(
       // regionID = null,
     } = req.query;
 
-    var getQuery = knex.table("students");
+    var getQuery = knex
+      .table("students")
+      .orderBy("students.created_at", "desc");
 
     if (centerID) {
       getQuery.where("students.idCenter", centerID);
@@ -78,6 +80,7 @@ router.get(
       .limit(perPage)
       .offset((page - 1) * perPage)
       .leftJoin("centers", "centers.id", "students.idCenter")
+      .leftJoin("courses", "courses.idStudent", "students.id")
       .select(
         "students.id",
         "students.registerNumber",
@@ -115,7 +118,12 @@ router.get(
         "students.created_at",
         "students.updated_at",
         "students.idCenter as centerID",
-        "centers.name as centerName"
+        "centers.name as centerName",
+        "courses.signUp",
+        "courses.startDate",
+        "courses.practice",
+        "courses.theory",
+        "courses.permission"
       );
 
     return res.json({
@@ -310,7 +318,8 @@ router.get(
     let getQueryExams = knex
       .table("payments")
       .where("payments.idStudent", studentID)
-      .where("payments.active", 1);
+      .where("payments.active", 1)
+      .orderBy("payments.date", "desc");
 
     var totalCount = await getQueryExams
       .clone()
@@ -329,6 +338,70 @@ router.get(
       totalCount: totalCount[0].totalResults,
       results: results,
     });
+  }
+);
+
+router.get(
+  "/get-sum-payments",
+  [
+    query("studentID").optional(),
+    query("search").optional(),
+    query("orderBy").optional({ nullable: true }),
+    query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
+    query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
+    query("page").isInt({ min: 1 }).toInt().optional(),
+  ],
+  // defaultGetValidators,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const {
+      studentID = null,
+      orderBy = null,
+      orderDir = null,
+      perPage = 10,
+      page = 1,
+    } = req.query;
+    console.log(studentID, "studentID");
+
+    return (studentPayments = await knex
+      .table("payments")
+      .where("payments.idStudent", studentID)
+      .where("payments.active", 1)
+      .select()
+      .then(async (results) => {
+        const sumarize = await results.reduce((accumulator, obj) => {
+          if (!accumulator[obj["description"]]) {
+            accumulator[obj["description"]] = {
+              description: obj["description"],
+              charge: 0,
+              payment: 0,
+              total: 0,
+            };
+          }
+          obj["type"] === "Cargo"
+            ? (accumulator[obj["description"]].charge += obj["quantity"])
+            : (accumulator[obj["description"]].payment += obj["quantity"]);
+
+          accumulator[obj["description"]].total =
+            accumulator[obj["description"]].payment -
+            accumulator[obj["description"]].charge;
+
+          return accumulator;
+        }, {});
+        const parseToArray = Object.values(sumarize);
+        const total = parseToArray.reduce((total, actual) => {
+          return total + actual.total;
+        }, 0);
+        return res.json({
+          results: parseToArray,
+          total: total,
+        });
+      }));
+
   }
 );
 

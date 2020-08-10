@@ -56,7 +56,9 @@ router.get(
     } = req.query;
     console.log(centerID, "centerID");
 
-    var getQuery = knex.table("teachers");
+    var getQuery = knex
+      .table("teachers")
+      .orderBy("teachers.created_at", "desc");
 
     if (centerID) {
       getQuery.where("teachers.idCenter", centerID);
@@ -87,7 +89,6 @@ router.get(
         "centers.name as centerName"
       );
 
-      
     return res.json({
       page: page || 1,
       perPage: perPage || 10,

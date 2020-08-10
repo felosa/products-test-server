@@ -10,7 +10,6 @@ const knex = require("../db/knex"); //the connection
 
 const router = express.Router();
 
-// TODOS LOS ARQUEOS DE UN CENTRO
 router.get(
   "/",
   // defaultGetValidators,

@@ -13,6 +13,65 @@ const jwt = require("jsonwebtoken");
 const router = express.Router();
 
 router.get(
+  "/get-closures",
+  [
+    query("centerID").optional(),
+    query("search").optional(),
+    query("orderBy").optional({ nullable: true }),
+    query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
+    query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
+    query("page").isInt({ min: 1 }).toInt().optional(),
+  ],
+  // defaultGetValidators,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const {
+      centerID = null,
+      orderBy = null,
+      orderDir = null,
+      perPage = 10,
+      page = 1,
+    } = req.query;
+
+    console.log(centerID, "centerID");
+
+    let getQuery = knex
+      .table("closures")
+      .where("closures.idCenter", centerID)
+      .orderBy("closures.date", "desc");
+
+    var totalCount = await getQuery
+      .clone()
+      .count("*", { as: "totalResults" })
+      .limit(999999)
+      .offset(0);
+
+    var results = await getQuery
+      .limit(perPage)
+      .offset((page - 1) * perPage)
+      .select(
+        "closures.id",
+        "closures.created_at",
+        "closures.updated_at",
+        "closures.date",
+        "closures.description",
+        "closures.idCenter",
+        "closures.quantity"
+      );
+
+    return res.json({
+      page: page || 1,
+      perPage: perPage || 10,
+      totalCount: totalCount[0].totalResults,
+      results: results,
+    });
+  }
+);
+router.get(
   "/get-payments",
   [
     query("centerID").optional(),

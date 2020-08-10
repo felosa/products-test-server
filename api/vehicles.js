@@ -53,7 +53,9 @@ router.get(
     } = req.query;
     console.log(centerID, "centerID");
 
-    var getQuery = knex.table("vehicles");
+    var getQuery = knex
+      .table("vehicles")
+      .orderBy("vehicles.created_at", "desc");
     if (centerID) {
       getQuery.where("vehicles.idCenter", centerID);
     }
