@@ -43,18 +43,10 @@ router.get(
       orderDir = null,
       perPage = 10,
       page = 1,
-      // firstName = null,
-      // lastName = null,
-      // jobTitle = null,
-      // companyName = null,
-      // countryName = null,
-      // countryID = null,
-      // regionName = null,
-      // regionID = null,
     } = req.query;
     console.log(centerID, "centerID");
 
-    var getQuery = knex.table("exams");
+    var getQuery = knex.table("exams").orderBy("exams.created_at", "desc");;
 
     if (centerID) {
       getQuery.where("exams.idCenter", centerID);

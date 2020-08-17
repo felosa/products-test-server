@@ -64,7 +64,6 @@ router.get(
       getQuery.where("courses.signUp", ">=", new Date(startDate));
     }
     if (null !== endDate) {
-      console.log("entra");
       getQuery.where("courses.signUp", "<=", new Date(endDate));
     }
 
@@ -123,8 +122,6 @@ router.get(
         "courses.permission"
       );
 
-
-
     return res.json({
       page: page || 1,
       perPage: perPage || 10,
@@ -143,14 +140,6 @@ router.get(
     query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
     query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
     query("page").isInt({ min: 1 }).toInt().optional(),
-    // query("firstName").optional(),
-    // query("lastName").optional(),
-    // query("jobTitle").optional(),
-    // query("companyName").optional(),
-    // query("countryName").optional(),
-    // query("countryID").optional(),
-    // query("regionName").optional(),
-    // query("regionID").optional(),
   ],
   // defaultGetValidators,
   async (req, res) => {
@@ -232,14 +221,6 @@ router.get(
       orderDir = null,
       perPage = 10,
       page = 1,
-      // firstName = null,
-      // lastName = null,
-      // jobTitle = null,
-      // companyName = null,
-      // countryName = null,
-      // countryID = null,
-      // regionName = null,
-      // regionID = null,
     } = req.query;
     console.log(studentID, "studentID");
 
@@ -277,18 +258,12 @@ router.get(
   [
     query("studentID").optional(),
     query("search").optional(),
+    query("startDate").optional(),
+    query("endDate").optional(),
     query("orderBy").optional({ nullable: true }),
     query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
     query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
     query("page").isInt({ min: 1 }).toInt().optional(),
-    // query("firstName").optional(),
-    // query("lastName").optional(),
-    // query("jobTitle").optional(),
-    // query("companyName").optional(),
-    // query("countryName").optional(),
-    // query("countryID").optional(),
-    // query("regionName").optional(),
-    // query("regionID").optional(),
   ],
   // defaultGetValidators,
   async (req, res) => {
@@ -299,34 +274,34 @@ router.get(
 
     const {
       studentID = null,
+      startDate = null,
+      endDate = null,
       orderBy = null,
       orderDir = null,
       perPage = 10,
       page = 1,
-      // firstName = null,
-      // lastName = null,
-      // jobTitle = null,
-      // companyName = null,
-      // countryName = null,
-      // countryID = null,
-      // regionName = null,
-      // regionID = null,
     } = req.query;
-    console.log(studentID, "studentID");
 
-    let getQueryExams = knex
+    let getQueryPayments = knex
       .table("payments")
       .where("payments.idStudent", studentID)
       .where("payments.active", 1)
       .orderBy("payments.date", "desc");
 
-    var totalCount = await getQueryExams
+    if (null !== startDate) {
+      getQueryPayments.where("payments.date", ">=", new Date(startDate));
+    }
+    if (null !== endDate) {
+      getQueryPayments.where("payments.date", "<=", new Date(endDate));
+    }
+
+    var totalCount = await getQueryPayments
       .clone()
       .count("*", { as: "totalResults" })
       .limit(999999)
       .offset(0);
 
-    var results = await getQueryExams
+    var results = await getQueryPayments
       .limit(perPage)
       .offset((page - 1) * perPage)
       .select();

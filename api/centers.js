@@ -71,11 +71,50 @@ router.get(
     });
   }
 );
+
+
+router.post(
+  "/closure",
+  [
+    body("centerID").toInt(),
+    body("description"),
+    body("date"),
+    body("quantity"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const data = matchedData(req, { includeOptionals: true });
+
+    knex("closures")
+      .insert({
+        description: data.description,
+        date: new Date(),
+        quantity: data.quantity,
+        idCenter: data.centerID,
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+      .then(([newID]) => {
+        return res.json({ newID });
+      })
+      .catch((err) => {
+        return res.status(500).send(err);
+      });
+  }
+);
+
+
 router.get(
   "/get-payments",
   [
     query("centerID").optional(),
     query("search").optional(),
+    query("startDate").optional(),
+    query("endDate").optional(),
     query("orderBy").optional({ nullable: true }),
     query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
     query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
@@ -90,6 +129,8 @@ router.get(
 
     const {
       centerID = null,
+      startDate = null,
+      endDate = null,
       orderBy = null,
       orderDir = null,
       perPage = 10,
@@ -98,19 +139,26 @@ router.get(
 
     console.log(centerID, "centerID");
 
-    let getQueryExams = knex
+    let getQueryPayments = knex
       .table("payments")
       .leftJoin("students", "students.id", "payments.idStudent")
       .where("students.idCenter", centerID)
       .orderBy("payments.date", "desc");
 
-    var totalCount = await getQueryExams
+    if (null !== startDate) {
+      getQueryPayments.where("payments.date", ">=", new Date(startDate));
+    }
+    if (null !== endDate) {
+      getQueryPayments.where("payments.date", "<=", new Date(endDate));
+    }
+
+    var totalCount = await getQueryPayments
       .clone()
       .count("*", { as: "totalResults" })
       .limit(999999)
       .offset(0);
 
-    var results = await getQueryExams
+    var results = await getQueryPayments
       .limit(perPage)
       .offset((page - 1) * perPage)
       .select();
