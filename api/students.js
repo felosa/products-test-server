@@ -10,6 +10,7 @@ const knex = require("../db/knex"); //the connection
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const e = require("express");
+const moment = require("moment");
 
 const router = express.Router();
 
@@ -19,19 +20,13 @@ router.get(
   [
     query("q").optional(),
     query("centerID").optional(),
+    query("startDate").optional(),
+    query("endDate").optional(),
     query("search").optional(),
     query("orderBy").optional({ nullable: true }),
     query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
     query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
     query("page").isInt({ min: 1 }).toInt().optional(),
-    // query("firstName").optional(),
-    // query("lastName").optional(),
-    // query("jobTitle").optional(),
-    // query("companyName").optional(),
-    // query("countryName").optional(),
-    // query("countryID").optional(),
-    // query("regionName").optional(),
-    // query("regionID").optional(),
   ],
   // defaultGetValidators,
   async (req, res) => {
@@ -45,22 +40,17 @@ router.get(
     var {
       q = null,
       centerID = null,
+      startDate = null,
+      endDate = null,
       orderBy = null,
       orderDir = null,
       perPage = 10,
       page = 1,
-      // firstName = null,
-      // lastName = null,
-      // jobTitle = null,
-      // companyName = null,
-      // countryName = null,
-      // countryID = null,
-      // regionName = null,
-      // regionID = null,
     } = req.query;
 
     var getQuery = knex
       .table("students")
+      .leftJoin("courses", "courses.idStudent", "students.id")
       .orderBy("students.created_at", "desc");
 
     if (centerID) {
@@ -68,6 +58,14 @@ router.get(
     }
     if (null !== q) {
       getQuery.where("students.firstName", "LIKE", `%${q}%`);
+    }
+
+    if (null !== startDate) {
+      getQuery.where("courses.signUp", ">=", new Date(startDate));
+    }
+    if (null !== endDate) {
+      console.log("entra");
+      getQuery.where("courses.signUp", "<=", new Date(endDate));
     }
 
     var totalCount = await getQuery
@@ -80,7 +78,6 @@ router.get(
       .limit(perPage)
       .offset((page - 1) * perPage)
       .leftJoin("centers", "centers.id", "students.idCenter")
-      .leftJoin("courses", "courses.idStudent", "students.id")
       .select(
         "students.id",
         "students.registerNumber",
@@ -125,6 +122,8 @@ router.get(
         "courses.theory",
         "courses.permission"
       );
+
+
 
     return res.json({
       page: page || 1,
@@ -401,7 +400,6 @@ router.get(
           total: total,
         });
       }));
-
   }
 );
 
