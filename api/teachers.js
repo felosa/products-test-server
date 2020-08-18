@@ -9,8 +9,77 @@ const {
 const knex = require("../db/knex"); //the connection
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const moment = require("moment");
 
 const router = express.Router();
+
+router.get(
+  "/classes",
+  [
+    query("centerID").optional(),
+    query("teacherID").optional(),
+    query("orderBy").optional({ nullable: true }),
+    query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
+    query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
+    query("page").isInt({ min: 1 }).toInt().optional(),
+  ],
+  // defaultGetValidators,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    var {
+      centerID = null,
+      teacherID = null,
+      orderBy = null,
+      orderDir = null,
+      perPage = 10,
+      page = 1,
+    } = req.query;
+    console.log(centerID, "centerID");
+
+    var getQuery = await knex
+      .table("class_types")
+      .leftJoin("generated_classes as gc", "gc.idClassType", "class_types.id")
+      .select(
+        {
+          id: "gc.id",
+          title: "class_types.description",
+          idClassType: "gc.idClassType",
+          class: "gc.reserved",
+          idStudent: "gc.idStudent",
+          idTeacher: "gc.idTeacher",
+          price: "gc.price",
+          date: "gc.date",
+          start: "gc.startHour",
+          duration: "class_types.duration",
+        }
+        // "gc.id",
+        // "class_types.description as title",
+        // "gc.idClassType",
+        // "gc.reserved as class",
+        // "gc.idStudent",
+        // "gc.idTeacher",
+        // "gc.price",
+        // 'CONCAT_WS(" ", DATE_FORMAT(gc.date, "%Y-%m-%d"),  gc.startHour) as start',
+        // 'CONCAT_WS(" ", DATE_FORMAT(gc.date, "%Y-%m-%d"), DATE_ADD(gc.startHour, INTERVAL gc.duration MINUTE)) as end'
+      )
+      .where("gc.idTeacher", teacherID)
+      .then(classes=>{
+        const finalClasses = classes.map(elem => {
+          newDate = moment(elem.date).format('YYYY-MM-DD')
+          console.log(moment(`${newDate}T${elem.start}`).format("YYYY-MM-DDTHH:mm:ss"), "class")
+        }
+        ) 
+      });
+
+    return res.json({
+      results: getQuery,
+    });
+  }
+);
 
 // TODOS LOS PROFESORES
 router.get(
@@ -45,14 +114,6 @@ router.get(
       orderDir = null,
       perPage = 10,
       page = 1,
-      // firstName = null,
-      // lastName = null,
-      // jobTitle = null,
-      // companyName = null,
-      // countryName = null,
-      // countryID = null,
-      // regionName = null,
-      // regionID = null,
     } = req.query;
     console.log(centerID, "centerID");
 
