@@ -11,7 +11,7 @@ const moment = require("moment");
 
 const router = express.Router();
 
-// TODOS LOS HOWS DE UN CENTRO
+// TODOS LOS EXAMENES DE UN CENTRO
 router.get(
   "/",
   [
@@ -46,7 +46,7 @@ router.get(
     } = req.query;
     console.log(centerID, "centerID");
 
-    var getQuery = knex.table("exams").orderBy("exams.created_at", "desc");;
+    var getQuery = knex.table("exams").orderBy("exams.created_at", "desc");
 
     if (centerID) {
       getQuery.where("exams.idCenter", centerID);
@@ -62,7 +62,14 @@ router.get(
       .limit(perPage)
       .offset((page - 1) * perPage)
       .leftJoin("centers", "centers.id", "exams.idCenter")
-      .select();
+      .select({
+        id: "exams.id",
+        registerNumber: "exams.registerNumber",
+        type: "exams.type",
+        date: "exams.date",
+        idCenter: "exams.idCenter",
+        centerName: "centers.name",
+      });
 
     return res.json({
       page: page || 1,

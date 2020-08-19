@@ -15,14 +15,7 @@ const router = express.Router();
 
 router.get(
   "/classes",
-  [
-    query("centerID").optional(),
-    query("teacherID").optional(),
-    query("orderBy").optional({ nullable: true }),
-    query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
-    query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
-    query("page").isInt({ min: 1 }).toInt().optional(),
-  ],
+  [query("teacherID").optional()],
   // defaultGetValidators,
   async (req, res) => {
     const errors = validationResult(req);
@@ -30,17 +23,9 @@ router.get(
       return res.status(422).json({ errors: errors.array() });
     }
 
-    var {
-      centerID = null,
-      teacherID = null,
-      orderBy = null,
-      orderDir = null,
-      perPage = 10,
-      page = 1,
-    } = req.query;
-    console.log(centerID, "centerID");
+    var { teacherID = null } = req.query;
 
-    var getQuery = await knex
+    return (getQuery = await knex
       .table("class_types")
       .leftJoin("generated_classes as gc", "gc.idClassType", "class_types.id")
       .select(
@@ -67,13 +52,27 @@ router.get(
         // 'CONCAT_WS(" ", DATE_FORMAT(gc.date, "%Y-%m-%d"), DATE_ADD(gc.startHour, INTERVAL gc.duration MINUTE)) as end'
       )
       .where("gc.idTeacher", teacherID)
-      .then(classes=>{
-        const finalClasses = classes.map(elem => {
-          newDate = moment(elem.date).format('YYYY-MM-DD')
-          console.log(moment(`${newDate}T${elem.start}`).format("YYYY-MM-DDTHH:mm:ss"), "class")
-        }
-        ) 
-      });
+      .then((classes) => {
+        const finalClasses = classes.map((elem) => {
+          const newDate = moment(elem.date).format("YYYY-MM-DD");
+          const newStart = moment(`${newDate}T${elem.start}`).format(
+            "YYYY-MM-DDTHH:mm:ss"
+          );
+          const newEnd = moment(newStart)
+            .add(elem.duration, "minutes")
+            .format("YYYY-MM-DDTHH:mm:ss");
+          elem["start"] = newStart;
+          elem["end"] = newEnd;
+          elem.class === 1
+            ? (elem.class = "reservada")
+            : (elem.class = "sin_reserva");
+          return elem;
+        });
+
+        return res.json({
+          results: finalClasses,
+        });
+      }));
 
     return res.json({
       results: getQuery,
