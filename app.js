@@ -2,19 +2,16 @@ const createError = require("http-errors");
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
-const cors = require('cors');
+const cors = require("cors");
 
-const whitelist = [
-  'http://localhost:3000'
-];
+const whitelist = ["http://localhost:3000"];
 const corsOptions = {
-  origin: function(origin, callback){
-      var originIsWhitelisted = whitelist.indexOf(origin) !== -1;
-      callback(null, originIsWhitelisted);
+  origin: function (origin, callback) {
+    var originIsWhitelisted = whitelist.indexOf(origin) !== -1;
+    callback(null, originIsWhitelisted);
   },
-  credentials: true
+  credentials: true,
 };
-
 
 const app = express();
 
@@ -32,7 +29,7 @@ const closures = require("./api/closures");
 const hows = require("./api/hows");
 const tariffs = require("./api/tariffs");
 const exams = require("./api/exams");
-// view engine setup
+const patterns = require("./api/patterns");
 
 app.use(logger("dev"));
 app.use(express.json());
@@ -51,17 +48,19 @@ app.use("/api/closures", closures);
 app.use("/api/hows", hows);
 app.use("/api/tariffs", tariffs);
 app.use("/api/exams", exams);
+app.use("/api/patterns", patterns);
+
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   res.status(err.status || 500);
   res.json({
     message: err.message,
-    error: req.app.get("env") === "development" ? err : {}
+    error: req.app.get("env") === "development" ? err : {},
   });
 });
 

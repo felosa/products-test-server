@@ -19,14 +19,6 @@ router.get(
     query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
     query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
     query("page").isInt({ min: 1 }).toInt().optional(),
-    // query("firstName").optional(),
-    // query("lastName").optional(),
-    // query("jobTitle").optional(),
-    // query("companyName").optional(),
-    // query("countryName").optional(),
-    // query("countryID").optional(),
-    // query("regionName").optional(),
-    // query("regionID").optional(),
   ],
   // defaultGetValidators,
   async (req, res) => {
@@ -41,14 +33,6 @@ router.get(
       orderDir = null,
       perPage = 10,
       page = 1,
-      // firstName = null,
-      // lastName = null,
-      // jobTitle = null,
-      // companyName = null,
-      // countryName = null,
-      // countryID = null,
-      // regionName = null,
-      // regionID = null,
     } = req.query;
     console.log(centerID, "centerID");
 
@@ -70,7 +54,6 @@ router.get(
       // .leftJoin("centers", "centers.id", "tariffs.idCenter")
       .select();
 
-
     return res.json({
       page: page || 1,
       perPage: perPage || 10,
@@ -80,6 +63,54 @@ router.get(
   }
 );
 
+// GET ONE TARIFF
+router.get(
+  "/:tariffID",
+  [param("tariffID").isInt().toInt()],
+  async (req, res) => {
+    try {
+      const { tariffID } = matchedData(req);
+      return knex("tariffs")
+        .leftJoin("centers", "centers.id", "tariffs.idCenter")
+        .select(
+          "tariffs.id",
+          "tariffs.name",
+          "tariffs.pvpSignUp",
+          "tariffs.pvpCourse",
+          "tariffs.pvpFirstTheoricExam",
+          "tariffs.pvpTheoricExam",
+          "tariffs.pvpPracticalExam",
+          "tariffs.pvpFirstProcedure",
+          "tariffs.pvpProcedure",
+          "tariffs.pvpRate",
+          "tariffs.pvpPracticalClass",
+          "tariffs.completeClasses",
+          "tariffs.simpleClasses",
+          "tariffs.active",
+          "tariffs.idCenter",
+          "centers.name as centerName"
+        )
+        .where("tariffs.id", tariffID)
+        .first()
+        .then((result) => {
+          return knex("packs")
+            .select()
+            .where("packs.idTariff", tariffID)
+            .then((packs) => {
+              result["packs"] = packs;
+              return res.json(result);
+            });
+        })
+        .catch((error) => {
+          console.log(error);
+          return res.status(500).send("Error");
+        });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send("Error");
+    }
+  }
+);
 
 // CREAR HOW
 router.post("/", [body("name"), body("centerID")], async (req, res) => {

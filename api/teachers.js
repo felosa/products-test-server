@@ -41,15 +41,6 @@ router.get(
           start: "gc.startHour",
           duration: "class_types.duration",
         }
-        // "gc.id",
-        // "class_types.description as title",
-        // "gc.idClassType",
-        // "gc.reserved as class",
-        // "gc.idStudent",
-        // "gc.idTeacher",
-        // "gc.price",
-        // 'CONCAT_WS(" ", DATE_FORMAT(gc.date, "%Y-%m-%d"),  gc.startHour) as start',
-        // 'CONCAT_WS(" ", DATE_FORMAT(gc.date, "%Y-%m-%d"), DATE_ADD(gc.startHour, INTERVAL gc.duration MINUTE)) as end'
       )
       .where("gc.idTeacher", teacherID)
       .then((classes) => {
@@ -177,6 +168,7 @@ router.get(
           "teachers.phone",
           "teachers.email",
           "teachers.birthday",
+          "teachers.teacherSignature",
           "teachers.created_at",
           "teachers.updated_at",
           "teachers.idCenter as centerID",

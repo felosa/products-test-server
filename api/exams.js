@@ -80,6 +80,35 @@ router.get(
   }
 );
 
+// GET ONE EXAM
+router.get("/:examID", [param("examID").isInt().toInt()], async (req, res) => {
+  try {
+    const { examID } = matchedData(req);
+    var vehicleQuery = knex("exams")
+      .leftJoin("centers", "centers.id", "exams.idCenter")
+      .select(
+        "exams.id",
+        "exams.date",
+        "exams.registerNumber",
+        "exams.idCenter",
+        "exams.type",
+        "centers.name as centerName"
+      )
+      .where("exams.id", examID)
+      .first()
+      .then((result) => {
+        return res.json(result);
+      })
+      .catch((error) => {
+        console.log(error);
+        return res.status(500).send("Error");
+      });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send("Error");
+  }
+});
+
 // CREAR EXAM
 router.post(
   "/",

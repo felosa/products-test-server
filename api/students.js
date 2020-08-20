@@ -22,6 +22,7 @@ router.get(
     query("centerID").optional(),
     query("startDate").optional(),
     query("endDate").optional(),
+    query("type").optional(),
     query("search").optional(),
     query("orderBy").optional({ nullable: true }),
     query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
@@ -42,6 +43,7 @@ router.get(
       centerID = null,
       startDate = null,
       endDate = null,
+      type = null,
       orderBy = null,
       orderDir = null,
       perPage = 10,
@@ -56,8 +58,21 @@ router.get(
     if (centerID) {
       getQuery.where("students.idCenter", centerID);
     }
+
     if (null !== q) {
       getQuery.where("students.firstName", "LIKE", `%${q}%`);
+    }
+
+    if (null !== type) {
+      if (type === "Alumnos Activos") {
+        getQuery.where("students.isOther", 0).andWhere("students.active", 1);
+      } else if (type === "Alumnos Inactivos") {
+        getQuery.where("students.isOther", 0).andWhere("students.active", 0);
+      } else if (type === "Otros Activos") {
+        getQuery.where("students.isOther", 1).andWhere("students.active", 1);
+      } else if (type === "Otros Inactivos") {
+        getQuery.where("students.isOther", 1).andWhere("students.active", 0);
+      }
     }
 
     if (null !== startDate) {
