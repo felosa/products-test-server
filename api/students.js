@@ -146,6 +146,39 @@ router.get(
   }
 );
 
+// TODOS LOS ALUMNOS PARA SELECCION EN CLASES PRACTICAS
+router.get(
+  "/class-selection",
+  [query("centerID").optional()],
+  // defaultGetValidators,
+  async (req, res) => {
+    const { centerID } = matchedData(req);
+    return knex("students")
+      .select(
+        "students.id",
+        "students.firstName",
+        "students.lastName1",
+        "students.lastName2",
+        "students.dni"
+      )
+      .where("idCenter", centerID)
+      .andWhere("active", 1)
+      .then((results) => {
+        const finalResults = results.map((elem, index) => {
+          const name = `${elem.firstName} ${
+            elem.lastName1 ? elem.lastName1 : ""
+          } ${elem.lastName2 ? elem.lastName2 : ""} ${elem.dni}`;
+          elem["name"] = name;
+          return elem;
+        });
+        return res.json({
+          results: finalResults,
+        });
+      })
+      .catch((error) => res.status(500).send(JSON.stringify(error)));
+  }
+);
+
 router.get(
   "/get-exams",
   [

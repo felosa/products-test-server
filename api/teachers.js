@@ -90,7 +90,7 @@ router.get(
         title: "class_types.description",
         idClassType: "gc.idClassType",
         class: "gc.reserved",
-        idStudent: "gc.idStudent",
+        studentID: "gc.idStudent",
         idTeacher: "gc.idTeacher",
         price: "gc.price",
         date: "gc.date",
