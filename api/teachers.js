@@ -28,20 +28,18 @@ router.get(
     return (getQuery = await knex
       .table("class_types")
       .leftJoin("generated_classes as gc", "gc.idClassType", "class_types.id")
-      .select(
-        {
-          id: "gc.id",
-          title: "class_types.description",
-          idClassType: "gc.idClassType",
-          class: "gc.reserved",
-          idStudent: "gc.idStudent",
-          idTeacher: "gc.idTeacher",
-          price: "gc.price",
-          date: "gc.date",
-          start: "gc.startHour",
-          duration: "class_types.duration",
-        }
-      )
+      .select({
+        id: "gc.id",
+        title: "class_types.description",
+        idClassType: "gc.idClassType",
+        class: "gc.reserved",
+        idStudent: "gc.idStudent",
+        idTeacher: "gc.idTeacher",
+        price: "gc.price",
+        date: "gc.date",
+        start: "gc.startHour",
+        duration: "class_types.duration",
+      })
       .where("gc.idTeacher", teacherID)
       .then((classes) => {
         const finalClasses = classes.map((elem) => {
@@ -64,6 +62,43 @@ router.get(
           results: finalClasses,
         });
       }));
+
+    return res.json({
+      results: getQuery,
+    });
+  }
+);
+
+// GET CLASS BY ID
+router.get(
+  "/classID",
+  [query("classID").optional()],
+  // defaultGetValidators,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    var { classID = null } = req.query;
+
+    const getQuery = await knex
+      .table("class_types")
+      .leftJoin("generated_classes as gc", "gc.idClassType", "class_types.id")
+      .select({
+        id: "gc.id",
+        title: "class_types.description",
+        idClassType: "gc.idClassType",
+        class: "gc.reserved",
+        idStudent: "gc.idStudent",
+        idTeacher: "gc.idTeacher",
+        price: "gc.price",
+        date: "gc.date",
+        startHour: "gc.startHour",
+        duration: "class_types.duration",
+      })
+      .where("gc.id", classID)
+      .first();
 
     return res.json({
       results: getQuery,
