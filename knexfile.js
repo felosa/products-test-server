@@ -9,5 +9,14 @@ module.exports = {
       password: "Escocia150416",
       database: "autius"
     }
+  },
+  staging: {
+    client: "mysql",
+    connection: {
+      host: "127.0.0.1",
+      database: "autiuspruebas",
+      user: "autius",
+      password: "koEl86^6"
+    }
   }
 };
