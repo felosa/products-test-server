@@ -516,7 +516,7 @@ router.post(
     body("idCenter").toInt(),
     body("registerNumber"),
     body("dni"),
-    body("dniExpiration"),
+    body("dniExpiration").toDate(),
     body("firstName"),
     body("lastName1"),
     body("lastName2"),
@@ -534,15 +534,17 @@ router.post(
     body("province"),
     body("nationality"),
     body("countryBirth"),
-    body("birthday"),
+    body("birthday").toDate(),
     body("medicalExamination"),
     body("how"),
     body("firstContact"),
     body("recieveNotifications"),
-    body("active"),
     body("password"),
     body("permission"),
     body("idTariff"),
+    body("completeCourse"),
+    body("observations"),
+    body("isOther"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -551,6 +553,13 @@ router.post(
     }
 
     const data = matchedData(req, { includeOptionals: true });
+
+    // Crear codigo de login para el usuario
+    const code = `${data.firstName[0].toLowerCase()}${data.lastName1.toLowerCase()}`
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+    console.log(data, code, "data del front");
 
     var idStudent;
 
@@ -571,7 +580,7 @@ router.post(
         var studentQuery = new Promise((resolve) => {
           knex("students")
             .insert({
-              registerNumber: 1,
+              registerNumber: "registerNumber",
               dni: data.dni,
               dniExpiration: data.dniExpiration,
               firstName: data.firstName,
@@ -589,16 +598,19 @@ router.post(
               postalCode: data.postalCode,
               city: data.city,
               province: data.province,
-              nationality: "data.nationality",
-              countryBirth: "data.countryBirth",
-              birthday: "2020-02-02",
+              nationality: data.nationality,
+              countryBirth: data.countryBirth,
+              birthday: data.birthday,
               medicalExamination: data.medicalExamination,
-              how: "data.how",
-              recieveNotifications: 1,
+              how: data.how,
+              recieveNotifications: data.recieveNotifications ? 1 : 0,
               idCenter: data.idCenter,
               active: 1,
-              firstContact: "a",
+              firstContact: data.firstContact,
               password: "data.password",
+              completeCourse: data.completeCourse,
+              observations: data.observations,
+              isOther: data.isOther ? 1 : 0,
               created_at: new Date(),
               updated_at: new Date(),
             })
@@ -613,13 +625,12 @@ router.post(
             });
         });
 
-        console.log(hash, "contrasena");
+        console.log(hash, "password");
 
         var userQuery = new Promise((resolve) => {
           knex("users")
             .insert({
-              // pasar para el user a coger la inicial del nombre y el priemr apellido
-              user: data.email,
+              user: code,
               password: hash,
               created_at: new Date(),
               updated_at: new Date(),
@@ -634,17 +645,41 @@ router.post(
             });
         });
 
+        Promise.all([studentQuery, userQuery])
+          .then((results) => {
+            console.log(results, "resultados finales");
+            let newStudentID = results[0];
+            knex("user_rols")
+              .insert({
+                idUser: results[1], // id de Usuario en user table
+                idEntity: results[0], // id de student en Student table
+                role: "ROLE_STUDENT",
+                created_at: new Date(),
+                updated_at: new Date(),
+              })
+              .then((response) => {
+                res.json({
+                  results: response,
+                });
+              });
+          })
+          .catch((error) => console.log("error"));
+
         var classBagQuery = await knex.table("student_class_bags").insert({
           idStudent: idStudent,
           quantity: 0,
+          created_at: new Date(),
+          updated_at: new Date(),
         });
 
         var courseQuery = await knex.table("courses").insert({
+          idStudent: idStudent,
           signUp: data.signUp,
           startDate: data.startDate,
           endDate: data.endDate,
           // logica para felicitationBirthday y las demas que vienen
           felicitationBirthday: data.birthday,
+          //cambiar los siguientes 2 valores a los correspondientes con logica
           twoMonths: data.birthday,
           endDateBad: data.birthday,
           permission: data.permission,
@@ -675,36 +710,9 @@ router.post(
             paymentType: null,
             date: new Date(),
           });
-        // Cuando las anteriores se han creado, meter el id del usuario en idUser, y el id del student(tabla students) en idEntity
 
-        return Promise.all([studentQuery, userQuery])
-          .then((results) => {
-            console.log(results, "resultados finales");
-            let newStudentID = results[0];
-            knex("user_rols")
-              .insert({
-                idUser: results[1], // id de Usuario en user table
-                idEntity: results[0], // id de student en Student table
-                role: "ROLE_STUDENT",
-                created_at: new Date(),
-                updated_at: new Date(),
-              })
-              .then((response) => {
-                return knex("student_class_bags")
-                  .insert({
-                    idStudent: newStudentID,
-                    quantity: 0,
-                    created_at: new Date(),
-                    updated_at: new Date(),
-                  })
-                  .then((response) => {
-                    res.json({
-                      results: response,
-                    });
-                  });
-              });
-          })
-          .catch((error) => console.log("error"));
+        // Cuando las anteriores se han creado, meter el id del usuario en idUser, y el id del student(tabla students) en idEntity
+        return res.json("Se ha creado correctamente");
       });
     });
   }

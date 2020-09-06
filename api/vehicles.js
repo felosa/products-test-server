@@ -172,9 +172,9 @@ router.post(
     param("ID").isInt().toInt(),
     body("enrollment"),
     body("description"),
-    body("itvDueDate"),
-    body("insuranceDueDate"),
-    body("nextPreventiveMaintenance"),
+    body("itvDueDate").toDate(),
+    body("insuranceDueDate").toDate(),
+    body("nextPreventiveMaintenance").toDate(),
     body("idCenter"),
   ],
   async (req, res) => {
