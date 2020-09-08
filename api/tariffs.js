@@ -111,6 +111,46 @@ router.get(
     }
   }
 );
+// GET ONE STUDENT ID
+router.get(
+  "/get-tariff-payment/:studentID",
+  [param("studentID").isInt().toInt()],
+  async (req, res) => {
+    try {
+      const { studentID } = matchedData(req);
+      return knex("courses")
+        .select("courses.idTariff")
+        .where("courses.idStudent", studentID)
+        .first()
+        .then(({ idTariff }) => {
+          console.log(idTariff, "resultado");
+          return knex("tariffs")
+            .leftJoin("centers", "centers.id", "tariffs.idCenter")
+            .select(
+              "tariffs.pvpSignUp as Matrícula",
+              "tariffs.pvpCourse as Curso Teórico",
+              "tariffs.pvpFirstTheoricExam as Primer Examen Teórico",
+              "tariffs.pvpTheoricExam as Examen Teórico",
+              "tariffs.pvpPracticalExam as Examen Práctico",
+              "tariffs.pvpFirstProcedure as Primera Tramitación",
+              "tariffs.pvpProcedure as Tramitación expediente",
+              "tariffs.pvpRate as Tasas",
+              "tariffs.pvpPracticalClass as Clase práctica 45 min"
+            )
+            .where("tariffs.id", idTariff)
+            .first()
+            .then((result) => res.json({ result }));
+        })
+        .catch((error) => {
+          console.log(error);
+          return res.status(500).send("Error");
+        });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send("Error");
+    }
+  }
+);
 
 // CREAR HOW
 router.post("/", [body("name"), body("centerID")], async (req, res) => {

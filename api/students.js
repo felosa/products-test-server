@@ -474,12 +474,25 @@ router.get(
           "students.created_at",
           "students.updated_at",
           "students.idCenter as centerID",
-          "centers.name as centerName"
+          "centers.name as centerName",
+          "courses.permission",
+          "courses.signUp",
+          "courses.startDate",
+          "courses.endDateBad",
+          "courses.reactivation1",
+          "courses.reactivation2",
+          "courses.endDate",
+          "courses.theory",
+          "courses.practice",
+          "courses.practiceSent",
+          "courses.practiceAdvice",
+          "courses.idTariff as tariffID"
         )
         .where("students.id", studentID)
         .first()
         // SELECCIONAR ROL?
         .leftJoin("user_rols as rol", "centers.id", "rol.idEntity")
+        .leftJoin("courses", "courses.idStudent", "students.id")
         .where("students.id", studentID)
         .first();
 
@@ -541,7 +554,7 @@ router.post(
     body("recieveNotifications"),
     body("password"),
     body("permission"),
-    body("idTariff"),
+    body("tariffID"),
     body("completeCourse"),
     body("observations"),
     body("isOther"),
@@ -683,7 +696,7 @@ router.post(
           twoMonths: data.birthday,
           endDateBad: data.birthday,
           permission: data.permission,
-          idTariff: data.idTariff,
+          idTariff: data.tariffID,
           practiceSent: 0,
         });
 
