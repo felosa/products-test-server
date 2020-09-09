@@ -193,7 +193,6 @@ router.post(
         insuranceDueDate: data.insuranceDueDate,
         nextPreventiveMaintenance: data.nextPreventiveMaintenance,
         idCenter: data.idCenter,
-        created_at: new Date(),
         updated_at: new Date(),
       })
       .where("id", data.ID)
