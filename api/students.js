@@ -291,7 +291,7 @@ router.get(
         "practical_classes",
         "practical_classes.idGeneratedClass",
         "generated_classes.id"
-      );
+      ).orderBy("generated_classes.date", "desc");
 
     return res.json({
       page: page || 1,
@@ -491,7 +491,7 @@ router.get(
         .where("students.id", studentID)
         .first()
         // SELECCIONAR ROL?
-        .leftJoin("user_rols as rol", "centers.id", "rol.idEntity")
+        .leftJoin("user_rols as rol", "students.id", "rol.idEntity")
         .leftJoin("courses", "courses.idStudent", "students.id")
         .where("students.id", studentID)
         .first();
