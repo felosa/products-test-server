@@ -4,10 +4,7 @@ const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const cors = require("cors");
 
-const whitelist = [
-  "http://localhost:3000",
-  "https://beta2020.autius.com",
-];
+const whitelist = ["http://localhost:3000", "https://beta2020.autius.com"];
 const corsOptions = {
   origin: function (origin, callback) {
     var originIsWhitelisted = whitelist.indexOf(origin) !== -1;
@@ -33,6 +30,7 @@ const hows = require("./api/hows");
 const tariffs = require("./api/tariffs");
 const exams = require("./api/exams");
 const patterns = require("./api/patterns");
+const tests = require("./api/tests");
 
 app.use(logger("dev"));
 app.use(express.json());
@@ -52,6 +50,7 @@ app.use("/api/hows", hows);
 app.use("/api/tariffs", tariffs);
 app.use("/api/exams", exams);
 app.use("/api/patterns", patterns);
+app.use("/api/tests", tests);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

@@ -291,7 +291,8 @@ router.get(
         "practical_classes",
         "practical_classes.idGeneratedClass",
         "generated_classes.id"
-      ).orderBy("generated_classes.date", "desc");
+      )
+      .orderBy("generated_classes.date", "desc");
 
     return res.json({
       page: page || 1,
@@ -502,13 +503,19 @@ router.get(
         .where("idEntity", studentID)
         .first();
 
-      return Promise.all([studentQuery, rolQuery])
-        .then(([student, rol]) => {
+      const classBagQuery = knex("student_class_bags")
+        .select("quantity")
+        .where("idStudent", studentID)
+        .first();
+
+      return Promise.all([studentQuery, rolQuery, classBagQuery])
+        .then(([student, rol, classes]) => {
           console.log(student, "centro");
           if (!student) {
             return res.status(401).send("Not found");
           }
           student["rol"] = rol;
+          student["classes"] = classes.quantity;
           return res.json(student);
         })
         .catch((error) => {
