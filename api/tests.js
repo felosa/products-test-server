@@ -49,7 +49,11 @@ router.get(
     var results = await getQuery
       .limit(perPage)
       .offset((page - 1) * perPage)
-      .select();
+      .distinct(
+        "student_tests.idStudent",
+        "student_tests.idTest as id",
+        "student_tests.testResult"
+      );
 
     return res.json({
       page: page || 1,
@@ -60,54 +64,16 @@ router.get(
   }
 );
 
-// GET ONE TARIFF
-// router.get(
-//   "/:tariffID",
-//   [param("tariffID").isInt().toInt()],
-//   async (req, res) => {
-//     try {
-//       const { tariffID } = matchedData(req);
-//       return knex("tariffs")
-//         .leftJoin("centers", "centers.id", "tariffs.idCenter")
-//         .select(
-//           "tariffs.id",
-//           "tariffs.name",
-//           "tariffs.pvpSignUp",
-//           "tariffs.pvpCourse",
-//           "tariffs.pvpFirstTheoricExam",
-//           "tariffs.pvpTheoricExam",
-//           "tariffs.pvpPracticalExam",
-//           "tariffs.pvpFirstProcedure",
-//           "tariffs.pvpProcedure",
-//           "tariffs.pvpRate",
-//           "tariffs.pvpPracticalClass",
-//           "tariffs.completeClasses",
-//           "tariffs.simpleClasses",
-//           "tariffs.active",
-//           "tariffs.idCenter",
-//           "centers.name as centerName"
-//         )
-//         .where("tariffs.id", tariffID)
-//         .first()
-//         .then((result) => {
-//           return knex("packs")
-//             .select()
-//             .where("packs.idTariff", tariffID)
-//             .then((packs) => {
-//               result["packs"] = packs;
-//               return res.json(result);
-//             });
-//         })
-//         .catch((error) => {
-//           console.log(error);
-//           return res.status(500).send("Error");
-//         });
-//     } catch (error) {
-//       console.log(error);
-//       return res.status(500).send("Error");
-//     }
-//   }
-// );
+// GET ONE TEST RESULT
+router.get("/:testID", [param("testID").isInt().toInt()], async (req, res) => {
+  const { testID } = matchedData(req);
+  return knex("tests")
+    .leftJoin("questions", "tests.idQuestion", "questions.id")
+    .select()
+    .where("tests.idTest", testID)
+    .then((result) => res.json({ result }));
+});
+
 // // GET ONE STUDENT ID
 // router.get(
 //   "/get-tariff-payment/:studentID",
