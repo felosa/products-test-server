@@ -10,6 +10,42 @@ const knex = require("../db/knex"); //the connection
 
 const router = express.Router();
 
+// GET ONE RANDOM TEST
+router.get(
+  "/get-random-test",
+  [param("studentID").isInt().toInt()],
+  async (req, res) => {
+    try {
+      const { studentID } = matchedData(req);
+      // TENGO QUE CREAR VARIABLES PARA NUMERO DE PREGUNTAS, SI ES HARD....
+      return knex("questions")
+        .select({
+          a: "questions.a",
+          active: "questions.active",
+          b: "questions.b",
+          c: "questions.c",
+          img: "questions.img",
+          question: "questions.question",
+        })
+        .where("questions.permission", 1)
+        .andWhere("questions.hard", 0)
+        .andWhere("questions.active", 1)
+        .orderByRaw("RAND()")
+        .limit(30)
+        .then((result) => {
+          res.json({ result });
+        })
+        .catch((error) => {
+          console.log(error);
+          return res.status(500).send("Error");
+        });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send("Error");
+    }
+  }
+);
+
 router.get(
   "/student-tests",
   [
@@ -73,47 +109,6 @@ router.get("/:testID", [param("testID").isInt().toInt()], async (req, res) => {
     .where("tests.idTest", testID)
     .then((result) => res.json({ result }));
 });
-
-// // GET ONE STUDENT ID
-// router.get(
-//   "/get-tariff-payment/:studentID",
-//   [param("studentID").isInt().toInt()],
-//   async (req, res) => {
-//     try {
-//       const { studentID } = matchedData(req);
-//       return knex("courses")
-//         .select("courses.idTariff")
-//         .where("courses.idStudent", studentID)
-//         .first()
-//         .then(({ idTariff }) => {
-//           console.log(idTariff, "resultado");
-//           return knex("tariffs")
-//             .leftJoin("centers", "centers.id", "tariffs.idCenter")
-//             .select(
-//               "tariffs.pvpSignUp as Matrícula",
-//               "tariffs.pvpCourse as Curso Teórico",
-//               "tariffs.pvpFirstTheoricExam as Primer Examen Teórico",
-//               "tariffs.pvpTheoricExam as Examen Teórico",
-//               "tariffs.pvpPracticalExam as Examen Práctico",
-//               "tariffs.pvpFirstProcedure as Primera Tramitación",
-//               "tariffs.pvpProcedure as Tramitación expediente",
-//               "tariffs.pvpRate as Tasas",
-//               "tariffs.pvpPracticalClass as Clase práctica 45 min"
-//             )
-//             .where("tariffs.id", idTariff)
-//             .first()
-//             .then((result) => res.json({ result }));
-//         })
-//         .catch((error) => {
-//           console.log(error);
-//           return res.status(500).send("Error");
-//         });
-//     } catch (error) {
-//       console.log(error);
-//       return res.status(500).send("Error");
-//     }
-//   }
-// );
 
 // // CREAR PAYMENT
 // router.post(
