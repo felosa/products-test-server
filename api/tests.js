@@ -76,11 +76,27 @@ router.get(
       getQuery.where("student_tests.idStudent", studentID);
     }
 
+    var passedTests = await knex("student_tests")
+      .where("idStudent", studentID)
+      .where("testResult", 1)
+      .count("*", { as: "passedTests" })
+      .offset(0);
+
     var totalCount = await getQuery
       .clone()
       .count("*", { as: "totalResults" })
       .limit(999999)
       .offset(0);
+
+    // var results = await getQuery
+    //   .limit(perPage)
+    //   .offset((page - 1) * perPage)
+    //   .distinct(
+    //     "student_tests.idStudent",
+    //     "student_tests.idTest as id",
+    //     "student_tests.testResult",
+    //     "tests.result"
+    //   )
 
     var results = await getQuery
       .limit(perPage)
@@ -88,14 +104,26 @@ router.get(
       .distinct(
         "student_tests.idStudent",
         "student_tests.idTest as id",
+        "student_tests.date",
         "student_tests.testResult"
-      );
+      )
+      .orderBy("student_tests.idTest", "desc")
+      .leftJoin("tests", "tests.idTest", "student_tests.idTest")
+      .where("tests.result", 1)
+      .count("tests.result as result")
+      .groupBy([
+        "student_tests.idTest",
+        "tests.result",
+        "student_tests.date",
+        "student_tests.testResult",
+      ]);
 
     return res.json({
       page: page || 1,
       perPage: perPage || 10,
       totalCount: totalCount[0].totalResults,
       results: results,
+      passed: passedTests[0].passedTests,
     });
   }
 );
