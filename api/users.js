@@ -64,15 +64,34 @@ router.post("/login", (req, res, next) => {
 
   knex("users")
     .leftJoin("user_rols", "user_rols.idUser", "users.id")
-    .select("users.id", "user", "password", "user_rols.role")
+    .select(
+      "users.id as idUser",
+      "user",
+      "password",
+      "user_rols.role",
+      "user_rols.idEntity as id"
+    )
     .where("user", userName)
     .first()
-    .then((user) => {
+    .then(async (user) => {
       if (!user) {
         const error = new Error("A user with this email could not be found.");
         error.statusCode = 401;
         throw error;
       }
+
+      if (user.role === "ROLE_STUDENT") {
+        await knex("students")
+          .leftJoin("courses", "courses.idStudent", "students.id")
+          .select()
+          .where("students.id", user.id)
+          .first()
+          .then((result) => {
+            user.permission = result.permission;
+            user.centerID = result.idCenter;
+          });
+      }
+
       loadedUser = user;
       console.log(loadedUser, "user");
       var hash = user.password;
@@ -85,6 +104,11 @@ router.post("/login", (req, res, next) => {
         error.statusCode = 401;
         throw error;
       }
+
+      // if (loadedUser.role === "ROLE_STUDENT") {
+      //   knex("students");
+      // }
+
       const token = jwt.sign(
         {
           email: loadedUser.email,

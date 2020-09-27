@@ -20,12 +20,14 @@ router.get(
       // TENGO QUE CREAR VARIABLES PARA NUMERO DE PREGUNTAS, SI ES HARD....
       return knex("questions")
         .select({
+          id: "questions.id",
           a: "questions.a",
           active: "questions.active",
           b: "questions.b",
           c: "questions.c",
           img: "questions.img",
           question: "questions.question",
+          correctAnswer: "questions.correctAnswer",
         })
         .where("questions.permission", 1)
         .andWhere("questions.hard", 0)
@@ -101,8 +103,8 @@ router.get(
     var results = await getQuery
       .limit(perPage)
       .offset((page - 1) * perPage)
-      .distinct(
-        "student_tests.idStudent",
+      .select(
+        // "student_tests.idStudent",
         "student_tests.idTest as id",
         "student_tests.date",
         "student_tests.testResult"
@@ -113,7 +115,7 @@ router.get(
       .count("tests.result as result")
       .groupBy([
         "student_tests.idTest",
-        "tests.result",
+        // "tests.result",
         "student_tests.date",
         "student_tests.testResult",
       ]);
@@ -138,50 +140,66 @@ router.get("/:testID", [param("testID").isInt().toInt()], async (req, res) => {
     .then((result) => res.json({ result }));
 });
 
-// // CREAR PAYMENT
-// router.post(
-//   "/store-payment",
-//   [
-//     body("studentID"),
-//     body("description"),
-//     body("paymentType"),
-//     body("quantity"),
-//     body("type"),
-//   ],
-//   async (req, res) => {
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//       return res.status(422).json({ errors: errors.array() });
-//     }
+// GUARDAR TEST
+router.post(
+  "/store-test",
+  [body("studentID"), body("questions")],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
 
-//     const {
-//       studentID = null,
-//       description = null,
-//       paymentType = null,
-//       quantity = null,
-//       type = "Cargo",
-//     } = matchedData(req, { includeOptionals: true });
+    const { studentID = null, questions = null } = matchedData(req, {
+      includeOptionals: true,
+    });
+    console.log(questions, "questions");
 
-//     return knex("payments")
-//       .insert({
-//         idStudent: studentID,
-//         description: description,
-//         quantity: quantity,
-//         type: type,
-//         paymentType: paymentType,
-//         date: new Date(),
-//         active: 1,
-//         created_at: new Date(),
-//         updated_at: new Date(),
-//       })
-//       .then(([newID]) => {
-//         return res.json({ newID });
-//       })
-//       .catch((err) => {
-//         return res.status(500).send(err);
-//       });
-//   }
-// );
+    // Comprobamos las respuestas correctas que ha tenido
+    const correctAnswerTest = questions.filter(
+      (question) => parseInt(question.answer) === question.correctAnswer
+    ).length;
+    // Comprobamos el numero de respuestas para saber el tipo de permiso
+    const numberQuestions = questions.length;
+
+    console.log(correctAnswerTest, "numero respuestas bien");
+
+    let testResult;
+
+    // Ahora hay que comprobar cuantas se necesitan para aprobar segun el tipo de permiso
+    if (
+      (correctAnswerTest > 26 && numberQuestions === 30) || // Coche
+      (correctAnswerTest > 17 && numberQuestions === 20) // Moto
+    ) {
+      testResult = 1;
+    } else {
+      testResult = 0;
+    }
+
+    // Habra que calcular el ultimo id de test del alumno para hacer la enumeracion
+
+    // return knex("payments")
+    //   .insert({
+    //     idStudent: studentID,
+    //     description: description,
+    //     quantity: quantity,
+    //     type: type,
+    //     paymentType: paymentType,
+    //     date: new Date(),
+    //     active: 1,
+    //     created_at: new Date(),
+    //     updated_at: new Date(),
+    //   })
+    //   .then(([newID]) => {
+    //     return res.json({ newID });
+    //   })
+    //   .catch((err) => {
+    //     return res.status(500).send(err);
+    //   });
+
+    return res.json({ hola: "hola" });
+  }
+);
 
 // // DISABLE HOW
 // router.post("/:ID", [param("ID").isInt().toInt()], async (req, res) => {
