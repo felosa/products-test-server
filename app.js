@@ -31,6 +31,7 @@ const tariffs = require("./api/tariffs");
 const exams = require("./api/exams");
 const patterns = require("./api/patterns");
 const tests = require("./api/tests");
+const classes = require("./api/classes");
 
 app.use(logger("dev"));
 app.use(express.json());
@@ -51,6 +52,7 @@ app.use("/api/tariffs", tariffs);
 app.use("/api/exams", exams);
 app.use("/api/patterns", patterns);
 app.use("/api/tests", tests);
+app.use("/api/classes", classes);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
