@@ -11,24 +11,24 @@ module.exports = {
     },
   },
   // staging
-  production: {
-    client: "mysql",
-    connection: {
-      host: "127.0.0.1",
-      port: "3306",
-      database: "autiuspruebas",
-      user: "autiuspruebas",
-      password: "desarrollo2020",
-    },
-  },
   // production: {
   //   client: "mysql",
   //   connection: {
   //     host: "127.0.0.1",
   //     port: "3306",
-  //     database: "autius",
-  //     user: "autius",
-  //     password: "koEl86^6",
+  //     database: "autiuspruebas",
+  //     user: "autiuspruebas",
+  //     password: "desarrollo2020",
   //   },
   // },
+  production: {
+    client: "mysql",
+    connection: {
+      host: "127.0.0.1",
+      port: "3306",
+      database: "autius",
+      user: "autius",
+      password: "koEl86^6",
+    },
+  },
 };
