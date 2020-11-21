@@ -31,40 +31,40 @@ router.get("/", [query("teacherID").optional()], async (req, res) => {
 });
 
 // GET ONE VEHICLE
-router.get(
-  "/:vehicleID",
-  [param("vehicleID").isInt().toInt()],
-  async (req, res) => {
-    try {
-      const { vehicleID } = matchedData(req);
-      console.log(vehicleID, "req");
-      var vehicleQuery = knex("teacher_schedules")
-        .leftJoin("centers", "centers.id", "teacher_schedules.idCenter")
-        .select(
-          "teacher_schedules.id",
-          "teacher_schedules.enrollment",
-          "teacher_schedules.description",
-          "teacher_schedules.itvDueDate",
-          "teacher_schedules.insuranceDueDate",
-          "teacher_schedules.nextPreventiveMaintenance",
-          "teacher_schedules.idCenter",
-          "centers.name as centerName"
-        )
-        .where("teacher_schedules.id", vehicleID)
-        .first()
-        .then((result) => {
-          return res.json(result);
-        })
-        .catch((error) => {
-          console.log(error);
-          return res.status(500).send("Error");
-        });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).send("Error");
-    }
-  }
-);
+// router.get(
+//   "/:vehicleID",
+//   [param("vehicleID").isInt().toInt()],
+//   async (req, res) => {
+//     try {
+//       const { vehicleID } = matchedData(req);
+//       console.log(vehicleID, "req");
+//       var vehicleQuery = knex("teacher_schedules")
+//         .leftJoin("centers", "centers.id", "teacher_schedules.idCenter")
+//         .select(
+//           "teacher_schedules.id",
+//           "teacher_schedules.enrollment",
+//           "teacher_schedules.description",
+//           "teacher_schedules.itvDueDate",
+//           "teacher_schedules.insuranceDueDate",
+//           "teacher_schedules.nextPreventiveMaintenance",
+//           "teacher_schedules.idCenter",
+//           "centers.name as centerName"
+//         )
+//         .where("teacher_schedules.id", vehicleID)
+//         .first()
+//         .then((result) => {
+//           return res.json(result);
+//         })
+//         .catch((error) => {
+//           console.log(error);
+//           return res.status(500).send("Error");
+//         });
+//     } catch (error) {
+//       console.log(error);
+//       return res.status(500).send("Error");
+//     }
+//   }
+// );
 
 // CREAR PATTERN
 router.post(

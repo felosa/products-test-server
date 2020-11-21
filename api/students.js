@@ -302,16 +302,87 @@ router.get(
     });
   }
 );
+
+const listingPayments = async (
+  res,
+  getQueryPayments,
+  perPage,
+  page,
+  orderBy,
+  orderDir
+) => {
+  var totalCount = await getQueryPayments
+    .clone()
+    .count("*", { as: "totalResults" })
+    .limit(999999)
+    .offset(0);
+
+  var results = await getQueryPayments
+    .limit(perPage)
+    .offset((page - 1) * perPage)
+    .select();
+
+  return res.json({
+    page: page || 1,
+    perPage: perPage || 10,
+    totalCount: totalCount[0].totalResults,
+    results: results,
+  });
+};
+
+const exportPayments = async (res, getQueryPayments, studentID) => {
+  console.log(studentID, "id studiante");
+
+  var student = await knex("students")
+    .select("students.firstName as Nombre", "students.lastName1 as Apellido")
+    .where("students.id", studentID);
+
+  var results = await getQueryPayments
+    .select(
+      "students.firstName as Nombre",
+      "students.lastName1 as Apellido",
+      "students.lastName2 as Apellido 2",
+      "students.dni as DNI",
+      "payments.date as Fecha",
+      "payments.description as Descripción",
+      "payments.paymentType as F. Pago",
+      "payments.quantity as importe",
+      "payments.type as Tipo"
+    )
+    .leftJoin("students", "students.id", "payments.idStudent");
+
+  const formatResult = results.map((elem) => {
+    elem["Fecha"] = moment(elem["Fecha"]).format("DD/MM/YYYY");
+    if (elem["Tipo"] === "Cargo") {
+      elem["Importe Cargo"] = elem["importe"];
+      elem["Importe"] = 0;
+    } else {
+      elem["Importe Cargo"] = 0;
+      elem["Importe"] = elem["importe"];
+    }
+    delete elem["importe"];
+    elem["IVA"] = "i";
+
+    return elem;
+  });
+
+  return res.json({
+    studentName: `${student[0]["Nombre"]}-${student[0]["Apellido"]}`,
+    data: formatResult,
+  });
+};
+
 router.get(
   "/get-payments",
   [
     query("studentID").optional(),
+    query("view").optional(),
     query("search").optional(),
     query("startDate").optional(),
     query("endDate").optional(),
     query("orderBy").optional({ nullable: true }),
     query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
-    query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
+    query("perPage").isInt({ min: 1, max: 1000 }).toInt().optional(),
     query("page").isInt({ min: 1 }).toInt().optional(),
   ],
   // defaultGetValidators,
@@ -322,6 +393,7 @@ router.get(
     }
 
     const {
+      view = "listing",
       studentID = null,
       startDate = null,
       endDate = null,
@@ -344,23 +416,23 @@ router.get(
       getQueryPayments.where("payments.date", "<=", new Date(endDate));
     }
 
-    var totalCount = await getQueryPayments
-      .clone()
-      .count("*", { as: "totalResults" })
-      .limit(999999)
-      .offset(0);
+    switch (view) {
+      case "listing":
+        return listingPayments(
+          res,
+          getQueryPayments,
+          perPage,
+          page,
+          orderBy,
+          orderDir
+        );
 
-    var results = await getQueryPayments
-      .limit(perPage)
-      .offset((page - 1) * perPage)
-      .select();
+      case "export":
+        return exportPayments(res, getQueryPayments, studentID);
 
-    return res.json({
-      page: page || 1,
-      perPage: perPage || 10,
-      totalCount: totalCount[0].totalResults,
-      results: results,
-    });
+      default:
+        return res.status(404).send("View not found");
+    }
   }
 );
 

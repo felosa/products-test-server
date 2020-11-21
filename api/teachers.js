@@ -62,10 +62,6 @@ router.get(
           results: finalClasses,
         });
       }));
-
-    return res.json({
-      results: getQuery,
-    });
   }
 );
 
@@ -102,6 +98,91 @@ router.get(
 
     return res.json({
       results: getQuery,
+    });
+  }
+);
+
+router.get(
+  "/get-export-classes",
+  [
+    query("teacherID").optional(),
+    query("startDate").optional(),
+    query("endDate").optional(),
+    query("perPage").isInt({ min: 1, max: 1000 }).toInt().optional(),
+    query("page").isInt({ min: 1 }).toInt().optional(),
+  ],
+  // defaultGetValidators,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const {
+      view = "listing",
+      teacherID = null,
+      startDate = null,
+      endDate = null,
+    } = req.query;
+
+    let getTeacherClassesQuery = knex
+      .table("class_types")
+      .leftJoin(
+        "generated_classes",
+        "generated_classes.idClassType",
+        "class_types.id"
+      )
+      .leftJoin("teachers", "teachers.id", "generated_classes.idTeacher")
+      .where("teachers.id", teacherID);
+
+    if (null !== startDate) {
+      getTeacherClassesQuery.where(
+        "generated_classes.date",
+        ">=",
+        new Date(startDate)
+      );
+    }
+    if (null !== endDate) {
+      getTeacherClassesQuery.where(
+        "generated_classes.date",
+        "<=",
+        new Date(endDate)
+      );
+    }
+
+    var teacher = await knex("teachers")
+      .select("teachers.firstName as Nombre", "teachers.lastName1 as Apellido")
+      .where("teachers.id", teacherID);
+
+    var results = await getTeacherClassesQuery
+
+      .select(
+        "firstName as Nombre",
+        "lastName1 as Apellidos",
+        "description as Descripción",
+        "class_types.duration as Duración"
+      )
+      .count("*", { as: "Unidades" })
+      .groupBy("teachers.id", "class_types.id");
+
+    // const formatResult = results.map((elem) => {
+    //   elem["Fecha"] = moment(elem["Fecha"]).format("DD/MM/YYYY");
+    //   if (elem["Tipo"] === "Cargo") {
+    //     elem["Importe Cargo"] = elem["importe"];
+    //     elem["Importe"] = 0;
+    //   } else {
+    //     elem["Importe Cargo"] = 0;
+    //     elem["Importe"] = elem["importe"];
+    //   }
+    //   delete elem["importe"];
+    //   elem["IVA"] = "i";
+
+    //   return elem;
+    // });
+
+    return res.json({
+      teacherName: `${teacher[0]["Nombre"]}-${teacher[0]["Apellido"]}`,
+      data: results,
     });
   }
 );
@@ -265,7 +346,6 @@ router.post(
 
     const data = matchedData(req, { includeOptionals: true });
 
-    console.log(data, "center");
     bcrypt.genSalt(10).then((salt, err) => {
       if (err) {
         this.logger.logError(err, "registerUser");
@@ -290,7 +370,7 @@ router.post(
               phone: data.phone,
               email: data.email,
               birthday: data.birthday,
-              password: data.password,
+              password: data.dni,
               teacherSignature: data.teacherSignature,
               idCenter: data.idCenter,
               created_at: new Date(),
@@ -355,16 +435,17 @@ router.post(
   "/:ID",
   [
     param("ID").isInt().toInt(),
-    body("idCenter"),
+    body("centerID"),
     body("firstName"),
+    body("rol"),
     body("lastName1"),
     body("lastName2"),
     body("dni"),
+    body("password"),
     body("phone"),
     body("email"),
     body("birthday"),
     body("teacherSignature"),
-    body("identityID"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -373,11 +454,11 @@ router.post(
     }
 
     // ID = id del profesor en la tabla teachers
-    // identityID = id que tiene el profesor en la tabla user
+    // rol.idUser = id que tiene el profesor en la tabla user
 
     const data = matchedData(req, { includeOptionals: true });
 
-    if (data.dni) {
+    if (data.password) {
       bcrypt.genSalt(10).then((salt, err) => {
         if (err) {
           this.logger.logError(err, "registerUser");
@@ -385,7 +466,7 @@ router.post(
           reject(err);
         }
 
-        bcrypt.hash(data.dni, salt).then((hash, err) => {
+        bcrypt.hash(data.password, salt).then((hash, err) => {
           if (err) {
             this.logger.logError(err, "registerUser");
 
@@ -395,16 +476,16 @@ router.post(
           var teacherQuery = new Promise((resolve) => {
             knex("teachers")
               .update({
-                firstName: data.firstName.toUpperCase(),
-                lastName1: data.lastName1.toUpperCase(),
-                lastName2: data.lastName2.toUpperCase(),
-                dni: data.dni.toUpperCase(),
+                firstName: data.firstName,
+                lastName1: data.lastName1,
+                lastName2: data.lastName2,
+                dni: data.dni,
                 phone: data.phone,
                 email: data.email,
                 birthday: data.birthday,
                 password: data.password,
                 teacherSignature: data.teacherSignature,
-                idCenter: data.idCenter,
+                idCenter: data.centerID,
                 updated_at: new Date(),
               })
               .where("id", data.ID)
@@ -428,7 +509,7 @@ router.post(
                 created_at: new Date(),
                 updated_at: new Date(),
               })
-              .where("id", data.identityID)
+              .where("id", data.rol.idUser)
               .then((userID) => {
                 console.log(userID, "id del user");
                 resolve(userID);

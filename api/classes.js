@@ -65,4 +65,109 @@ router.get(
   }
 );
 
+// CREAR CLASE
+router.post(
+  "/",
+  [
+    body("idClassType").toInt(),
+    body("idTeacher").toInt(),
+    body("idStudent"),
+    body("startDate").toDate(),
+    body("startHour"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+    const data = matchedData(req, { includeOptionals: true });
+
+    let {
+      idClassType = null,
+      idTeacher = null,
+      idStudent = null,
+      startDate = null,
+      startHour = null,
+    } = data;
+
+    console.log(data, "data");
+
+    let reserved = idStudent ? 1 : 0;
+
+    knex("generated_classes")
+      .insert({
+        idClassType: idClassType,
+        startHour: startHour,
+        date: startDate,
+        idTeacher: idTeacher,
+        idStudent: idStudent,
+        reserved: reserved,
+        price: 20,
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+      .then(([newID]) => {
+        return res.json({ newID });
+      })
+      .catch((err) => {
+        return res.status(500).send(err);
+      });
+  }
+);
+
+// EDIT CLASS
+router.post(
+  "/:ID",
+  [
+    param("ID").isInt().toInt(),
+    body("idClassType").toInt(),
+    body("idTeacher").toInt(),
+    body("studentID"),
+    body("date").toDate(),
+    body("startHour"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const data = matchedData(req, { includeOptionals: true });
+
+    let {
+      idClassType = null,
+      idTeacher = null,
+      studentID = null,
+      date = null,
+      startHour = null,
+    } = data;
+
+    console.log(data, "data");
+
+    let reserved = studentID ? 1 : 0;
+
+    knex("generated_classes")
+      .update({
+        idClassType: idClassType,
+        startHour: startHour,
+        date: date,
+        idTeacher: idTeacher,
+        idStudent: studentID,
+        reserved: reserved,
+        // price: 20,
+        updated_at: new Date(),
+      })
+      .where("id", data.ID)
+      .then((result) => {
+        if (result > 0) {
+          return res.send(`Updated`);
+        }
+        return res.status(404).send("Not found");
+      })
+      .catch((err) => {
+        return res.status(500).send(err);
+      });
+  }
+);
+
 module.exports = router;
