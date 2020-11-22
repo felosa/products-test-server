@@ -34,7 +34,6 @@ router.get(
       perPage = 10,
       page = 1,
     } = req.query;
-    console.log(centerID, "centerID");
 
     var getQuery = knex.table("tariffs");
 
@@ -123,7 +122,6 @@ router.get(
         .where("courses.idStudent", studentID)
         .first()
         .then(({ idTariff }) => {
-          console.log(idTariff, "resultado");
           return knex("tariffs")
             .leftJoin("centers", "centers.id", "tariffs.idCenter")
             .select(

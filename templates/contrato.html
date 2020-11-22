@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Contrato</title>
+    <style>
+      body {
+        font-size: 14px;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 0;
+      }
+
+      p {
+        letter-spacing: 0.0125em;
+        margin-top: 12px !important;
+        margin-bottom: 12px !important;
+      }
+
+      .autoescuela table {
+        border: 1px solid black;
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      td {
+        height: 20px;
+        border: 1px solid black;
+        white-space: nowrap;
+      }
+      .autoescuela img {
+        height: 90px;
+      }
+
+      .logo {
+        border-top: 1px solid white !important;
+        border-left: 1px solid white !important;
+      }
+
+      .tarifas td {
+        border: none;
+      }
+
+      .general .tablas {
+        border: 1px solid black !important;
+        width: 50%;
+        margin-left: 5%;
+      }
+
+      .general td {
+        width: 40%;
+      }
+
+      .noapto {
+        font-size: 12px;
+        white-space: normal;
+      }
+
+      .condiciones {
+        text-align: center;
+      }
+
+      .firmas {
+        margin-top: 28px;
+      }
+
+      .firmas table {
+        width: 100%;
+        text-align: center !important;
+      }
+
+      .firmas td {
+        border: 1px solid white !important;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Contrato de Enseñanza Nº {{ $student->registerNumber }}</h1>
+    <div class="autoescuela">
+      <table>
+        <tr>
+          <td rowspan="4" class="logo">
+            <img src="./images/logoAuto.png" />
+          </td>
+        </tr>
+        <tr>
+          <td><sup>autoescuela</sup> {{ $center->denomination }}</td>
+          <td colspan="2"><sup>Director</sup> {{ $center->master }}</td>
+          <td><sup>Numero Provincial</sup> {{ $center->provinceNumber }}</td>
+        </tr>
+        <tr>
+          <td><sup> CIF fiscal</sup> {{ $center->cif }}</td>
+          <td colspan="3"></td>
+        </tr>
+        <tr>
+          <td colspan="2"><sup>Domicilio</sup>{{ $center->adress }}</td>
+          <td><sup>Localidad</sup>{{ $center->city }}</td>
+          <td><sup>C.P.</sup>{{ $center->postalCode }}</td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <sup>Alumno</sup>{{ $student->firstName }} {{ $student->lastName1 }}
+            {{ $student->lastName2 }}
+          </td>
+          <td>
+            <sup>Fecha de nacimiento</sup
+            ><?php echo date('d-m-Y', strtotime($student->birthday))?>
+          </td>
+          <td><sup>DNI</sup>{{ $student->dni }}</td>
+        </tr>
+        <tr>
+          <td colspan="3"><sup>Domicilio</sup>{{ $student->wayName }}</td>
+          <td><sup>Localidad</sup>{{ $student->city }}</td>
+          <td><sup>C.P</sup>{{ $student->postalCode }}</td>
+        </tr>
+        @if($guardian)
+        <tr>
+          <td colspan="3">
+            <sup>Representante Legal (en su caso)</sup>{{ $guardian->name }}
+          </td>
+          <td><sup>Fecha de nacimiento</sup>{{ $guardian->birthday }}</td>
+          <td><sup>DNI</sup>{{ $guardian->dni }}</td>
+        </tr>
+        <tr>
+          <td colspan="3"><sup>Domicilio</sup>{{ $guardian->adress }}</td>
+          <td><sup>Localidad</sup>{{ $guardian->city }}</td>
+          <td><sup>C.P</sup>{{ $guardian->postalCode }}</td>
+        </tr>
+        @endif
+      </table>
+    </div>
+
+    <p style="margin-top: 1rem">
+      Ambos con capacidad legal para contraer y obligarse, convienen el presente
+      contrato de enseñanza para la formación y adiestramiento en la conducción
+      de automóviles, para los que es necesario el permiso de clase:
+      <b>{{ $course->permission }}</b>
+    </p>
+    <p>
+      De acuerdo con el régimen de enseñanza establecido en el capítulo 5º del
+      Reglamento de las Escuelas Particulares de Conductores, aprobado por el
+      Real Decreto 1.295/2003, de fecha 17 de octubre de 2003 (B.O.E.
+      258-28-10-03).
+    </p>
+
+    <div class="tarifas">
+      <table class="general">
+        <td>
+          <table>
+            <tr>
+              <th colspan="2">IVA Incluido</th>
+            </tr>
+            <tr>
+              <td style="width: 175px">Matrícula</td>
+              <td style="width: 50px">{{ $tariff->pvpSignUp }} €</td>
+            </tr>
+            <tr>
+              <td style="width: 175px">Clases teóricas</td>
+              <td style="width: 50px">{{ $theoricalClass }} €</td>
+            </tr>
+            <tr>
+              <td style="width: 175px">Clase Circulación</td>
+              <td style="width: 50px">{{ $tariff->pvpPracticalClass }} €</td>
+            </tr>
+            <tr>
+              <td style="width: 175px">Tramitación expediente Jefatura</td>
+              <td style="width: 50px">{{ $tariff->pvpProcedure }} €</td>
+            </tr>
+            <tr>
+              <td style="width: 175px">Clase examen circulación</td>
+              <td style="width: 50px">{{ $tariff->pvpPracticalExam }} €</td>
+            </tr>
+            <tr>
+              <td style="width: 175px">Tasa de solicitud oficial</td>
+              <td style="width: 50px">{{ $tariff->pvpRate }} €</td>
+            </tr>
+          </table>
+        </td>
+        <td>
+          <table>
+            <tr>
+              <th colspan="2">Plazos</th>
+            </tr>
+            <tr>
+              <td style="width: 150px">Matrícula</td>
+              <td style="width: 50px">12 meses</td>
+            </tr>
+            <tr>
+              <td style="width: 150px">Periodo de formación teórica</td>
+              <td style="width: 50px">3 meses</td>
+            </tr>
+            <tr>
+              <td style="width: 150px">
+                Coste reactivación test por caducidad
+              </td>
+              <td style="width: 50px">9,90€ / mes</td>
+            </tr>
+            <tr>
+              <td style="width: 150px">Reactivación de Test</td>
+              <td style="width: 50px">1 meses</td>
+            </tr>
+            <tr>
+              <td style="width: 150px">(DGT) Apto del examen teórico</td>
+              <td style="width: 50px">2 años</td>
+            </tr>
+            <tr>
+              <td style="width: 150px" class="noapto">
+                Tras un no apto, tiempo hasta la caducidad de la tasa y
+                expediente, si hay convocatoria abierta
+              </td>
+              <td style="width: 50px">6 meses</td>
+            </tr>
+          </table>
+        </td>
+      </table>
+    </div>
+
+    <div class="condiciones">
+      <h3>CONDICIONES GENERALES</h3>
+    </div>
+
+    <p>
+      1ª. La Escuela impartirá las enseñanzas necesarias para la obtención del
+      permiso de conducción reseñado, con la máxima dedicación y eficacia, y con
+      profesorado que cumpla todos los requisitos exigidos en el Reglamento de
+      Escuelas Particulares de Conductores.
+    </p>
+    <p>
+      2ª. La duración de las clases será la siguiente: Teórica curso programado
+      de <b>12 horas</b>; Prácticas de maniobras, <b>45 minutos</b>; Prácticas
+      de circulación, <b>45 minutos</b>.
+    </p>
+    <p>
+      3ª. Para poder ser presentado a examen será necesaria una certificación
+      conjunta del Director/a y el Profesor/a que haya impartido las enseñanzas
+      de la conducción en la que se expresa que, a su juicio, el alumno ha
+      recibido las enseñanzas necesarias para la obtención del permiso
+      solicitado. Si el alumno/a insistiera en ser presentado a examen sin este
+      requisito, el Director de la Escuela lo hará constar expresamente,
+      resolviendo en cada caso la Jefatura Provincial de Tráfico, según proceda.
+    </p>
+    <p>
+      4ª. Los gastos de inscripción en la Escuela se abonarán una sola vez,
+      independientemente del número de convocatorias necesarias para la
+      obtención del permiso de conducir. Si resuelto el contrato por el motivo
+      indicado en la cláusula novena, el alumno/a decidiera suscribir un nuevo o
+      nuevos contrato/s de enseñanza con la autoescuela, éste no abonará ningún
+      gasto de inscripción por la suscripción de dicho/s contrato/s.
+    </p>
+    <p>
+      5ª. Salvo casos debidamente justificados y autorizados por la Jefatura de
+      Tráfico, el alumno será acompañado, durante la prueba de circulación por
+      el Profesor/es que le haya impartido la enseñanza práctica, que se
+      responsabilizará del doble mando.
+    </p>
+    <p>
+      6ª. La Escuela velará por el cumplimiento de todo lo dispuesto en la
+      legislación vigente, así como del estricto cumplimiento de las
+      obligaciones del profesorado, atendiendo a cualquier reclamación o queja
+      del alumno en relación con la enseñanza recibida, a cuyo efecto, en el
+      caso de quedar disconforme el alumno, dispone de hojas de reclamaciones en
+      el que podrá manifestar sus quejas para conocimiento de la Jefatura
+      Provincial de Tráfico.
+    </p>
+    <p>
+      7ª. Se acuerda que la tramitación correrá a cargo
+      <b>de la Auto Escuela</b>. El alumno/a autoriza a la escuela a realizar la
+      gestión ante Jefatura de cuantos documentos sean necesarios para obtener
+      el permiso de conducir, siendo su coste el de "tramitación expediente".
+    </p>
+
+    <div class="condiciones">
+      <h3>CONDICIONES PARTICULARES</h3>
+    </div>
+
+    <p>
+      8ª. Tras el inicio del curso teórico, el alumno dispondrá de hasta
+      <b>3 meses</b> para realizar su formación teórica y tener acceso a los
+      test, pasado dicho periodo, para poder continuar con su formación deberá
+      pagar la "reactivación" de test por periodos sucesivos de 3 meses, cuyo
+      coste será equivalente al 50% del coste que hubiera pagado por la
+      formación teórica al inicio.
+    </p>
+    <p>
+      9ª. El presente contrato tendrá una duración de <b>12 meses</b> desde el
+      día de su firma. Finalizado el mismo, el alumno tendrá derecho a que se le
+      reintegren las tasas oficiales, si estas no hubieran sido desembolsadas
+      ante el organismo correspondiente.
+    </p>
+    <p>
+      10ª. Si el alumno/a renunciase a la obtención del permiso de conducción
+      pretendido, no por ello dejará de abonar el importe de los servicios que,
+      a la liquidación del presente contrato, le hubiesen sido prestados por la
+      escuela, de acuerdo con los precios reseñados.
+    </p>
+    <p>
+      11ª. El alumno abonará a la Auto Escuela anticipadamente el importe de los
+      servicios a recibir, así como el importe correspondiente a cada examen.
+    </p>
+    <p>
+      12ª. La documentación necesaria para la solicitud del permiso de conducir
+      aludido en este contrato será aportado por el alumno/a con una
+      anticipación de diez días a la convocatoría correspondiente.
+    </p>
+    <p>
+      13ª. El alumno deberá avisar, al menos con <b>VEINTICUATRO</b> horas de
+      antelación su falta de asistencia a la clase práctica. En caso de no
+      hacerlo la clase se contará como realizada por lo que tendrá que abonar el
+      importe de la misma. Si el alumno/a tuviese alguna promoción de clases
+      prácticas sin coste, deberá cumplirse lo siguiente: haber realizado el
+      curso teórico y tener el examen teórico superado, las clases prácticas sin
+      coste serán las últimas en realizarse antes del primer examen práctico,
+      que el alumno/a adquiere el compromiso de realizar con la autoescuela.
+    </p>
+    <p>
+      14ª. Las partes, para la resolución de cualquier conflicto derivado del
+      presente contrato que genere litigio judicial, se someten a la competencia
+      de los Juzgados y Tribunales que correspondan al lugar del cumplimiento de
+      la obligación que genere dicho conflicto.
+    </p>
+    <p>
+      15ª. En virtud de lo establecido en la Ley 3/2018 de Protección de Datos y
+      RGPD UE2016/679, La Escuela le informa que sus datos pasarán a formar
+      parte de un fichero titularidad de la misma, con la única finalidad de
+      gestionar la relación que en virtud del presente contrato se establece
+      entre usted y la referida entidad. La Escuela le garantiza el ejercicio de
+      sus derechos de acceso, rectificación, cancelación y oposición solicitando
+      por escrito en la dirección arriba manifiesta. Asimismo se autoriza la
+      comunicación por las sigueintes vías:
+      <b>WASAP (SI) - TELEFONO (SI) - SMS (SI) - CORREO ELECTRONICO (SI)</b> Ver
+      política completa de privacidad en autius.com/privacidad
+    </p>
+    <p>
+      16ª. Convocatorias: se estará a lo dispuesto en el Artículo 51 del
+      Reglamento General de Conductores. (Real Decreto 818/2009 del 8 de Mayo).
+    </p>
+    <p>
+      17ª. La Auto Escuela se reservará el derecho el derecho de cambio de
+      profesor o vehículo por razones de fuerza mayor.
+    </p>
+    <p>
+      18ª. El importe de las tasas oficiales está sujeto a modificaciones en
+      función de la variación que por parte de la DGT pueda sufrir.
+    </p>
+    <span
+      >Las presentes tarifas podrán ser modificadas por la autoescuela con
+      motivo de actualización periódica.</span
+    >
+
+    <div class="firmas">
+      <p>
+        En prueba de conformidad, ambas partes firman por duplicado el presente
+        contrato, entregandose un ejemplar al alumno/a. En
+        <span style="text-transform: uppercase">{{ $center->city }}</span> a
+        <?php echo date('d/m/Y h:i:s') ?>
+      </p>
+      <table>
+        <tr>
+          <td style="width: 50%; height: 80px">
+            <div>
+              <span style="display: block"
+                >El Alumno/a (o su representante)</span
+              >
+              <div style="height: 63px; background-color: transparent"></div>
+            </div>
+          </td>
+          <td style="width: 50%; height: 80px">
+            <div>
+              <span style="display: block">Por la Escuela</span>
+              <img width="80px" src="./images/firmaDirector.png" />
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

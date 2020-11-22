@@ -221,7 +221,6 @@ router.get(
       perPage = 10,
       page = 1,
     } = req.query;
-    console.log(centerID, "centerID");
 
     var getQuery = knex
       .table("teachers")
@@ -272,7 +271,6 @@ router.get(
   async (req, res) => {
     try {
       const { teacherID } = matchedData(req);
-      console.log(teacherID, "req");
       var teacherQuery = knex("teachers")
         .leftJoin("centers", "centers.id", "teachers.idCenter")
         .select(
@@ -305,7 +303,6 @@ router.get(
 
       return Promise.all([teacherQuery, rolQuery])
         .then(([teacher, rol]) => {
-          console.log(teacher, "centro");
           if (!teacher) {
             return res.status(401).send("Not found");
           }
@@ -377,7 +374,6 @@ router.post(
               updated_at: new Date(),
             })
             .then((teacherID) => {
-              console.log(teacherID, "id del teacher");
               resolve(teacherID);
             })
             .catch((error) => {

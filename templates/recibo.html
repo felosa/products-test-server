@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Recibo</title>
+    <style>
+      body {
+        font-size: 16px;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 0;
+      }
+      p {
+        letter-spacing: 0.0125em;
+      }
+      table {
+        border: 1px solid black;
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1.5rem 0;
+      }
+      .padding-1 {
+        padding: 1rem;
+      }
+      td,
+      th {
+        border: 1px solid black;
+        padding: 0 0.25rem;
+      }
+      th {
+        text-align: left;
+      }
+      td {
+        height: 1.25rem;
+      }
+      .centered {
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <table id="center_info">
+      <tbody>
+        <tr>
+          <td width="25%">
+            <img
+              style="max-width: 135px; margin: auto; padding: 1rem"
+              src="./images/autius-rojo.svg"
+            />
+          </td>
+          <td width="75%" style="padding: 1rem">
+            <p>{{ $center->name }}</p>
+            <p>
+              {{ $center->adress }} - {{ $center->postalCode }} - {{
+              $center->city }}
+            </p>
+            <p>{{ $center->cif }}</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 class="centered">JUSTIFICANTE DE PAGO</h2>
+
+    <table id="student">
+      <thead>
+        <tr>
+          <th>ALUMNO</th>
+          <th>PERMISO</th>
+          <th>NOMBRE Y APELLIDOS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td></td>
+          <td>{{ $course->permission }}</td>
+          <td>
+            {{ $student->firstName }} {{ $student->lastName1 }} {{
+            $student->lastName2 }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div
+      style="width: 100%; background-color: #cbd5e0; border: 1px solid black"
+    >
+      <h3 class="centered">
+        Resumen de movimientos del {{ date('d-m-y', strtotime($start)) }} al {{
+        date('d-m-y', strtotime($end)) }}
+      </h3>
+    </div>
+    <table id="payments" style="margin-top: 0">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Forma de pago</th>
+          <th>Concepto</th>
+          <th style="text-align: right">Importe pagado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach($payments as $payment)
+        <tr>
+          <td>{{ date('d-m-Y', strtotime($payment->date)) }}</td>
+          <td>{{ $payment->paymentType }}</td>
+          <td>{{ $payment->description }}</td>
+          <td style="text-align: right">{{ $payment->quantity }} €</td>
+        </tr>
+        @endforeach
+      </tbody>
+    </table>
+  </body>
+</html>

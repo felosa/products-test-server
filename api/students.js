@@ -211,7 +211,6 @@ router.get(
       // regionName = null,
       // regionID = null,
     } = req.query;
-    console.log(studentID, "studentID");
 
     let getQueryExams = knex
       .table("student_exams")
@@ -270,7 +269,6 @@ router.get(
       perPage = 10,
       page = 1,
     } = req.query;
-    console.log(studentID, "studentID");
 
     let getQueryExams = knex
       .table("generated_classes")
@@ -331,7 +329,6 @@ const listingPayments = async (
 };
 
 const exportPayments = async (res, getQueryPayments, studentID) => {
-  console.log(studentID, "id studiante");
 
   var student = await knex("students")
     .select("students.firstName as Nombre", "students.lastName1 as Apellido")
@@ -460,7 +457,6 @@ router.get(
       perPage = 10,
       page = 1,
     } = req.query;
-    console.log(studentID, "studentID");
 
     return (studentPayments = await knex
       .table("payments")
@@ -507,7 +503,6 @@ router.get(
   async (req, res) => {
     try {
       const { studentID } = matchedData(req);
-      console.log(studentID, "req");
       const studentQuery = knex("students")
         .leftJoin("centers", "centers.id", "students.idCenter")
         .select(
@@ -582,7 +577,6 @@ router.get(
 
       return Promise.all([studentQuery, rolQuery, classBagQuery])
         .then(([student, rol, classes]) => {
-          console.log(student, "centro");
           if (!student) {
             return res.status(401).send("Not found");
           }
@@ -651,8 +645,6 @@ router.post(
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
 
-    console.log(data, code, "data del front");
-
     var idStudent;
 
     bcrypt.genSalt(10).then((salt, err) => {
@@ -708,7 +700,6 @@ router.post(
             })
             .then((studentID) => {
               idStudent = studentID;
-              console.log(studentID, "id del student");
               resolve(studentID);
             })
             .catch((error) => {
@@ -739,7 +730,6 @@ router.post(
 
         Promise.all([studentQuery, userQuery])
           .then((results) => {
-            console.log(results, "resultados finales");
             let newStudentID = results[0];
             knex("user_rols")
               .insert({

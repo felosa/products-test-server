@@ -1,0 +1,40 @@
+<!doctype html>
+
+<html>
+    <head>
+        <title>Autorizacion</title>
+        <style>
+            p{
+                font-weight:bold;
+                display:inline;
+            }
+        </style>
+    </head>
+    <body>
+        Yo {{ firstName }} {{ lastName1 }} {{ lastName2 }} con DNI/NIE {{ studentDNI }}
+        <br><br>
+        <p>Autorizo</p> a la escuela particular de conductores <p> {{ denomination }} con numero provincial {{ provinceNumber }}</p> con la que tengo suscrito un contrato de enseñanza,
+        para que gestione en mi nombre, ante la Jefatura Provincial de Tráfico, el despacho de cuantos documentos sean de mi interés y estén directamente relacionados
+        con la obtención del permiso o licencia de conducción y ello al amparo de lo que dispone el artículo 1.3 del Real Decreto 1295/2003, de 17 de octubre, por el que
+        se aprueba el Reglamento Regulador de las Escuelas Particulares de Conductores.
+        <br><br>
+        Asimismo manifiesta:
+        <br><br>
+        - Que la escuela me ha dado fiel y puntual información del coste del este servicio, así como del coste de la tasa de la Jefatura Provincial de Tráfico vigente en el 
+        momento de la firma ({{ pvpRate }} €) que se paga por cada solicitud, válida para dos convocatorias y que incluye la expedición de permisos/licencia y que ambos costes se encuentran
+        detallados específicamente en el contrato de enseñanza que ha suscrito y del cual tiene copia.<br><br>
+        
+        - No estar privado por resolución judicial del derecho a conducir vehículos de motor y ciclomotores; no hallarse sometido a suspensión o intervención administrativa del permiso
+        o licencia de conducción; no ser titular de un permiso de conducción de igual clase expedido en otro Estado parte del Acuerdo sobre el Espacio Ecónomico Europeo.<br><br>
+
+        - Haber sido informado de que los datos de carácter personal recogidos en el formulario de solicitud de pruebas de aptitud serán tratados exclusivamente para la finalidad de prestar
+        el servicio solicitado en la DGT, aplicando la normativa vigente de protección de datos y legitimados por el Real Decreto Legislativo 6/2015, de 30 de octubre, por el que se aprueba
+        el texto refundido de la Ley sobre Tráfico, Circulación de Vehículos a Motor y Seguridad Vial (el responsable del tratamiento es la Dirección General de Tráfico. Podrá ejercer sus 
+        derechos direigiendo formualrio a: DGT, calle Josefa Valcárcel 44 28071 Madrid; o bien: protecciondedatos@dgt.es. No están previstas transferencias internacionales y la conservación
+        de los datos será poer el tiempo necesario para cumplir con la finalidad del tratamiento. https://sede.dgt.gob.es/es/contenidos/proteccion-de-datos.shtml).<br><br>
+
+        Y para que así conste, firma el presente documento en prueba de su conformidad y para dejar constancia de lo manifestado a los efectos legales pertinentes, <br>
+        en {{ city }} a {{ date }}><br>
+        Firma del alumno,
+    </body>
+</html>

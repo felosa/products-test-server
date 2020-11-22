@@ -47,7 +47,6 @@
 // module.exports.applySearchConditions = (query, searchValue, fields) => {
 //   // if (searchValue === null) return;
 //   // fields.forEach(field => {
-//   //   console.log(field, searchValue);
 //   //   query.orWhere(field, "LIKE", `%${searchValue}%`);
 //   // });
 // };

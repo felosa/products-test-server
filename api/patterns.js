@@ -107,7 +107,6 @@ router.post(
 
     const data = matchedData(req, { includeOptionals: true });
     let newState = parseInt(data.active);
-    console.log(data, newState, "respuestas");
 
     knex("teacher_schedules")
       .update({

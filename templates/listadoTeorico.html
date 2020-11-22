@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Listado Teorico</title>
+    <style>
+      body {
+        padding: 1%;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 20px;
+      }
+
+      .autoescuela {
+        display: flex;
+        margin-top: 30px;
+      }
+
+      .autoescuela input {
+        outline: 0;
+        border-bottom: 1px solid black;
+
+        background-color: white;
+      }
+
+      .autoescuela td {
+        white-space: nowrap;
+      }
+
+      .autoescuela .table1 {
+        margin-left: none;
+      }
+
+      .autoescuela .table2 {
+        margin-left: 350px;
+      }
+
+      .autoescuela .valor {
+        width: 100px;
+        border-bottom: 1px solid black;
+        border-top: none;
+        border-left: none;
+        font-size: 15px;
+      }
+
+      .estudiantes {
+        /* margin-top:10px; */
+      }
+
+      .estudiantes table {
+        border: 1px solid black;
+        border-collapse: collapse;
+        text-align: center;
+        width: 100%;
+      }
+
+      .estudiantes td,
+      th {
+        border: 1px solid black;
+      }
+
+      .estudiantes .title td {
+        border-top: none;
+      }
+
+      .cuenta h2 {
+        font-size: 15px;
+      }
+
+      .page-break {
+        page-break-after: always;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>RELACIÓN DE SOLICITUDES - PRUEBA TEÓRICA</h1>
+
+    <div class="autoescuela">
+      <table class="table1">
+        <tr>
+          <td>Denominación de autoescuela</td>
+          <td class="valor">{{ $center->denomination }}</td>
+        </tr>
+        <tr>
+          <td>Número Autoescuela</td>
+          <td class="valor">{{ $center->provinceNumber }}</td>
+        </tr>
+        <tr>
+          <td>Sección</td>
+          <td class="valor">{{ $center->sectionNumber }}</td>
+        </tr>
+
+        <tr>
+          <td>Digito de control</td>
+          <td class="valor">{{ $center->controlDigit }}</td>
+        </tr>
+      </table>
+      <table class="table2">
+        <tr>
+          <td>Fecha de presentación</td>
+          <td class="valor">{{ $exam->registerNumber }}</td>
+        </tr>
+        <tr>
+          <td>Fecha examen</td>
+          <td class="valor"><?php echo date('d/m/Y',strtotime($date))?></td>
+        </tr>
+
+        <tr>
+          <td>Nº Secuencial</td>
+          <td class="valor"></td>
+        </tr>
+      </table>
+    </div>
+    <div class="estudiantes">
+      <table>
+        <tr class="title">
+          <td colspan="5"><h2>Expedientes nuevos</h2></td>
+        </tr>
+        <tr>
+          <th>Nº</th>
+          <th>DNI</th>
+          <th>Nombre y apellidos</th>
+          <th>Permiso</th>
+          <th>Observaciones</th>
+        </tr>
+        <?php $i = 1; ?>
+        @foreach ($news as $new)
+        <tr>
+          <td><?php echo $i ?></td>
+          <td>{{ $new->dni }}</td>
+          <td>
+            {{ $new->registerNumber }} {{ $new->firstName }} {{ $new->lastName1
+            }} {{ $new->lastName2 }}
+          </td>
+          <td>{{ $new->permission }}</td>
+          <td></td>
+        </tr>
+        <?php $i++ ?>
+        @endforeach
+      </table>
+    </div>
+    <div class="cuenta">
+      <h2>Total alumnos: {{ count($news) }}</h2>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h1>RELACIÓN DE SOLICITUDES - PRUEBA TEÓRICA</h1>
+    <div class="autoescuela">
+      <table class="table1">
+        <tr>
+          <td>Denominación de autoescuela</td>
+          <td class="valor">{{$center->denomination}}</td>
+        </tr>
+        <tr>
+          <td>Número Autoescuela</td>
+          <td class="valor">{{$center->provinceNumber}}</td>
+        </tr>
+        <tr>
+          <td>Sección</td>
+          <td class="valor">{{$center->sectionNumber}}</td>
+        </tr>
+
+        <tr>
+          <td>Digito de control</td>
+          <td class="valor">{{$center->controlDigit}}</td>
+        </tr>
+      </table>
+      <table class="table2">
+        <tr>
+          <td>Fecha de presentación</td>
+          <td class="valor">{{$exam->registerNumber}}</td>
+        </tr>
+        <tr>
+          <td>Fecha examen</td>
+          <td class="valor"><?php echo date('d/m/Y',strtotime($date))?></td>
+        </tr>
+
+        <tr>
+          <td>Nº Secuencial</td>
+          <td class="valor"></td>
+        </tr>
+      </table>
+    </div>
+    <div class="estudiantes">
+      <table>
+        <tr class="title">
+          <td colspan="5"><h2>Expedientes repetidores</h2></td>
+        </tr>
+        <tr>
+          <th>Nº</th>
+          <th>DNI</th>
+          <th>Nombre y apellidos</th>
+          <th>Permiso</th>
+          <th>Observaciones</th>
+        </tr>
+        <?php $i = 1; ?>
+        @foreach ($repeaters as $repeater)
+        <tr>
+          <td><?php echo $i ?></td>
+          <td>{{ $repeater->dni }}</td>
+          <td>
+            {{ $repeater->registerNumber }} {{ $repeater->firstName }}
+            {{$repeater->lastName1}} {{$repeater->lastName2}}
+          </td>
+          <td>{{ $repeater->permission }}</td>
+          <td></td>
+        </tr>
+        <?php $i++ ?>
+        @endforeach
+      </table>
+    </div>
+    <div class="cuenta">
+      <h2>Total alumnos: {{ count($repeaters) }}</h2>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h1>RELACIÓN DE SOLICITUDES - PRUEBA TEÓRICA</h1>
+    <div class="autoescuela">
+      <table class="table1">
+        <tr>
+          <td>Denominación de autoescuela</td>
+          <td class="valor">{{ $center->denomination }}</td>
+        </tr>
+        <tr>
+          <td>Número Autoescuela</td>
+          <td class="valor">{{ $center->provinceNumber }}</td>
+        </tr>
+        <tr>
+          <td>Sección</td>
+          <td class="valor">{{ $center->sectionNumber }}</td>
+        </tr>
+
+        <tr>
+          <td>Digito de control</td>
+          <td class="valor">{{ $center->controlDigit }}</td>
+        </tr>
+      </table>
+      <table class="table2">
+        <tr>
+          <td>Fecha de presentación</td>
+          <td class="valor">{{ $exam->registerNumber }}</td>
+        </tr>
+        <tr>
+          <td>Fecha examen</td>
+          <td class="valor"><?php echo date('d/m/Y',strtotime($date))?></td>
+        </tr>
+
+        <tr>
+          <td>Nº Secuencial</td>
+          <td class="valor"></td>
+        </tr>
+      </table>
+    </div>
+    <div class="estudiantes">
+      <table>
+        <tr class="title">
+          <td colspan="5"><h2>Expedientes Aplazados</h2></td>
+        </tr>
+        <tr>
+          <th>Nº</th>
+          <th>DNI</th>
+          <th>Nombre y apellidos</th>
+          <th>Permiso</th>
+          <th>Observaciones</th>
+        </tr>
+        <?php $i=1; ?>
+        @foreach ($postponeds as $postponed)
+        <tr>
+          <td><?php echo $i ?></td>
+          <td>{{ $postponed->dni }}</td>
+          <td>
+            {{ $postponed->registerNumber }} {{ $postponed->firstName }} {{
+            $postponed->lastName1 }} {{ $postponed->lastName2 }}
+          </td>
+          <td>{{ $postponed->permission }}</td>
+          <td></td>
+        </tr>
+        <?php $i++ ?>
+        @endforeach
+      </table>
+    </div>
+    <div class="cuenta">
+      <h2>Total alumnos: {{ count($postponeds) }}</h2>
+    </div>
+  </body>
+</html>

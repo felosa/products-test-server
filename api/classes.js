@@ -67,7 +67,7 @@ router.get(
 
 // CREAR CLASE
 router.post(
-  "/",
+  "/create-one",
   [
     body("idClassType").toInt(),
     body("idTeacher").toInt(),
@@ -90,8 +90,6 @@ router.post(
       startHour = null,
     } = data;
 
-    console.log(data, "data");
-
     let reserved = idStudent ? 1 : 0;
 
     knex("generated_classes")
@@ -112,6 +110,55 @@ router.post(
       .catch((err) => {
         return res.status(500).send(err);
       });
+  }
+);
+// CREAR VARIAS CLASES A LA VEZ
+router.post(
+  "/create-multiple",
+  [
+    body("idCenter").toInt(),
+    body("teacherID").toInt(),
+    body("startDate").toDate(),
+    body("startHour"),
+    body("endDate").toDate(),
+    body("endHour"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+    const data = matchedData(req, { includeOptionals: true });
+
+    let {
+      idCenter = null,
+      teacherID = null,
+      startDate = null,
+      startHour = null,
+      endDate = null,
+      endHour = null,
+    } = data;
+
+    // knex("generated_classes")
+    //   .insert({
+    //     idClassType: idClassType,
+    //     startHour: startHour,
+    //     date: startDate,
+    //     idTeacher: idTeacher,
+    //     idStudent: idStudent,
+    //     reserved: 0,
+    //     price: 20,
+    //     created_at: new Date(),
+    //     updated_at: new Date(),
+    //   })
+    //   .then(([newID]) => {
+    //     return res.json({ newID });
+    //   })
+    //   .catch((err) => {
+    //     return res.status(500).send(err);
+    //   });
+
+    return "Generadas";
   }
 );
 
@@ -141,8 +188,6 @@ router.post(
       date = null,
       startHour = null,
     } = data;
-
-    console.log(data, "data");
 
     let reserved = studentID ? 1 : 0;
 

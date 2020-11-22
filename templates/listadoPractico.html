@@ -1,0 +1,180 @@
+<!doctype html>
+<html>
+<head>
+    <title>Listado Practico</title>
+<style>
+     /* body{text-align:center} */
+    table{
+        text-align:center;
+        width:100%;
+        border:1px solid black;
+        border-collapse:collapse;
+    }
+    sup{
+        font-size:9px;
+    }
+    td,th{
+        border:1px solid black;
+        white-space: nowrap;
+        padding-top:2px;
+        padding-bottom:2px;
+    }
+    .cabecera{
+        margin-bottom: 5px;
+    }
+    .logo{
+        height:70px;
+    }
+
+    .logo2{
+        height:70px;
+        position:absolute;
+        top:0px;
+        right:150px;
+    }
+    .title{
+        border:2px solid black;
+        width:100%;
+        padding:1%;
+        text-align:center;
+        font-weight:bold;
+    }
+
+    .jefatura{
+        width:100%;
+        margin-top:30px;
+        text-align:left;
+        /* border:1px solid red; */
+    }
+
+    .jefatura tr{
+        height:30px;
+        vertical-align:top;
+    }
+
+    .jefatura td,th{
+        width:50%;
+    }
+
+    .autoescuela{
+        width:100%;
+        margin-top:20px;
+        margin-bottom:30px;
+    }
+    .autoescuela .table2{
+        margin-top:0px;
+    }
+    .autoescuela tr{
+        height:50px;
+        vertical-align:top;
+    }
+
+    .jefatura .autoescuela p{
+        justify-content:flex-end;
+    }
+    .alumnos{
+        margin-bottom:50px;
+    }
+
+    .alumnos table{
+        text-align:center;
+    }
+
+   .alumnos th{
+    height: 25px;
+    font-size:12px;
+    white-space: normal !important;
+   }
+
+   .alumnos td{
+       font-size:12px;
+   }
+
+   .firma{
+       text-align:center;
+       margin-bottom:150px;
+   }
+</style>
+</head>
+<body>
+    <div class="cabecera">
+        <img src="./images/geLogo.png" class="logo">
+        <img src="./images/dgt.png" class="logo2">
+    </div>
+    <div class="title">RELACIÓN DE ALUMNOS PARA LA PRUEBA PRÁCTICA</div>
+    <div class="jefatura">
+        <table>
+            <tr>
+                <th colspan="2">A CONSIGNAR POR LA JEFATURA DE TRÁFICO</th>
+            </tr>
+            <tr class="second">
+            <td> <sup>Fecha de examen (dd/mm/aaaa)</sup><p><?php echo date("d-m-Y",strtotime($exam->date))?></p></td>
+            <td> <sup>Hora de citación</sup></td>
+        </table>
+    </div>
+    <div class="autoescuela">
+        <table class="table1">
+            <tr>
+                <td style="width:190px"><sup>Escuela de conductores</sup><p>{{$center->denomination}}</p></td>
+                <td style="width:70px"><sup>Número provincial</sup><p>{{$center->provinceNumber}}</p></td>
+                <td style="width:50px"><sup>Seccion</sup><p>{{$center->sectionNumber}}</p></td>
+                <td style="width:50px"><sup>Digito de control</sup><p>{{$center->controlDigit}}</p></td>
+            </tr>
+        </table>
+        <table class="table2">
+            <tr>
+            <td style="width:110px"> <sup>Número secuencial:</sup></td>
+            <td style="width:450px"> <sup>Nombre y apellidos del profesor</sup><p>{{$teacher['lastName1']. " ".$teacher['lastName2'].", ".$teacher['firstName']}}</p></td>
+            <td> <sup>DNI/NIE:</sup><p>{{$teacher->dni}}</p></td>
+        </table>
+    </div>
+    <p style="font-weight:bold">Relación de alumnos inscritos en esta autoescuela que son presentados a las pruebas de control de aptitudes y comportamientos por el profesor indicado:</p>
+    <div class="alumnos">
+        <table>
+            <tr>
+                <th rowspan="2" style="width:2%">Nº</th>
+                <th rowspan="2" style="width:10%">DNI/NIE</th>
+                <th rowspan="2" style="width:20%">Apellidos y nombre</th>
+                <th rowspan="2" style="width:5%">Nº inscripcion en el registro</th>
+                <th rowspan="2" style="width:5%">Nº de clases</th>
+                <th colspan="2" style="width:10%">Clases de prueba</th>
+                <th rowspan="2" style="width:5%"> Clase de permiso</th>
+                <th rowspan="2" style="width:5%">Matrícula de vehículo</th>
+                <tr>
+                <th style="width:5%">Circuito Cerrado</th>
+                <th style="width:5%">Circulación</th>
+                </tr>
+                
+            </tr>
+            <?php $i=1 ?>
+            @foreach ($students as $student)
+                <tr>
+                    <td>{{$i}}</td>
+                    <td>{{$student["dni"]}}</td>
+                    <td>{{$student["lastName1"] ." ". $student["lastName2"].", ".$student["firstName"]}}</td>
+                    <td>{{$student["registerNumber"]}}</td>
+                    <td>{{$student["classes"]}}</td>
+                    <td></td>
+                    <td>X</td>
+                    <td>{{$student["permission"]}}</td>
+                    <td>{{$student["enrollment"]}}</td>
+                </tr>
+                <?php $i++ ?>
+            @endforeach
+        </table>
+    </div>
+    <div class="firma">
+        {{$center->city}} a <?php echo date('d-m-Y') ?><br><br>
+        El Director de la escuela<br>
+        (Firma y sello)
+    </div>
+
+    <small>
+        PROTECCIÓN DE DATOS DE CARÁCTER PERSONAL. - A los efectos de la Ley Orgánica 15/1999, de 13 de diciembre, de protección de datos de carácter personal,
+    se informa que sus datos personales se incorporarán a ficheros inscritos en el Registro General de la Agencia Española de Protección de Datos.
+    Dichos ficheros cuentas con las medidas de seguridad adecuadas para garantizar la confidencialidad y seguridad de los mismos frente a personas no autorizadas.
+    Podrá ejercer los derechos de accesos, rectificación, cancelación y oposición en cualquier oficina de atención presencial de la Dirección General de
+    Tráfico o a través de su sede electrónica en www.dgt.es
+    </small>
+</body>
+</Html>

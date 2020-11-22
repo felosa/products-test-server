@@ -44,7 +44,6 @@ router.get(
       perPage = 10,
       page = 1,
     } = req.query;
-    console.log(centerID, "centerID");
 
     var getQuery = knex.table("exams").orderBy("exams.created_at", "desc");
 
@@ -120,7 +119,6 @@ router.post(
     }
 
     const data = matchedData(req, { includeOptionals: true });
-    console.log(data, "data");
     knex("exams")
       .insert({
         registerNumber: moment(new Date()).format("YYYYMMDD"),

@@ -17,8 +17,7 @@ router.get(
   // defaultGetValidators,
   async (req, res) => {
     var { centerID = null } = req.query;
-
-    console.log(centerID, "center");
+    
     var getQuery = knex.table("hows");
 
     if (centerID) {

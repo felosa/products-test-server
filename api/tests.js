@@ -153,7 +153,6 @@ router.post(
     const { studentID = null, questions = null } = matchedData(req, {
       includeOptionals: true,
     });
-    console.log(questions, "questions");
 
     // Comprobamos las respuestas correctas que ha tenido
     const correctAnswerTest = questions.filter(
@@ -161,8 +160,6 @@ router.post(
     ).length;
     // Comprobamos el numero de respuestas para saber el tipo de permiso
     const numberQuestions = questions.length;
-
-    console.log(correctAnswerTest, "numero respuestas bien");
 
     let testResult;
 

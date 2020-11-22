@@ -51,7 +51,6 @@ router.get(
       // regionName = null,
       // regionID = null,
     } = req.query;
-    console.log(centerID, "centerID");
 
     var getQuery = knex
       .table("vehicles")
@@ -97,7 +96,6 @@ router.get(
   async (req, res) => {
     try {
       const { vehicleID } = matchedData(req);
-      console.log(vehicleID, "req");
       var vehicleQuery = knex("vehicles")
         .leftJoin("centers", "centers.id", "vehicles.idCenter")
         .select(

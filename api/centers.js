@@ -37,8 +37,6 @@ router.get(
       page = 1,
     } = req.query;
 
-    console.log(centerID, "centerID");
-
     let getQuery = knex
       .table("closures")
       .where("closures.idCenter", centerID)
@@ -123,7 +121,15 @@ const listingPayments = async (
   var results = await getQueryPayments
     .limit(perPage)
     .offset((page - 1) * perPage)
-    .select();
+    .select(
+      "date",
+      "firstName",
+      "lastName1",
+      "paymentType",
+      "quantity",
+      "type",
+      "description"
+    );
 
   return res.json({
     page: page || 1,
@@ -241,7 +247,6 @@ router.get(
   async (req, res) => {
     try {
       const { centerID } = matchedData(req);
-      console.log(centerID, "req");
       var centerQuery = knex("centers")
         .select(
           "centers.id",
@@ -277,7 +282,6 @@ router.get(
 
       return Promise.all([centerQuery, rolQuery])
         .then(([center, rol]) => {
-          console.log(center, "centro");
           if (!center) {
             return res.status(401).send("Not found");
           }
@@ -373,7 +377,6 @@ router.post(
     }
 
     const data = matchedData(req, { includeOptionals: true });
-    console.log(data, "center");
     bcrypt.genSalt(10).then((salt, err) => {
       if (err) {
         this.logger.logError(err, "registerUser");
@@ -408,7 +411,6 @@ router.post(
               updated_at: new Date(),
             })
             .then((centerID) => {
-              console.log(centerID, "id del centro");
               resolve(centerID);
             })
             .catch((error) => {
@@ -416,8 +418,6 @@ router.post(
               resolve();
             });
         });
-
-        console.log(hash, "contrasena");
 
         var userQuery = new Promise((resolve) => {
           knex("users")

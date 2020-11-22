@@ -21,7 +21,6 @@ router.post("/", [body("user"), body("password")], (req, res) => {
 
   const data = matchedData(req, { includeOptionals: true });
 
-  console.log(data, "user");
   bcrypt.genSalt(10).then((salt, err) => {
     if (err) {
       this.logger.logError(err, "registerUser");
@@ -55,12 +54,9 @@ router.post("/", [body("user"), body("password")], (req, res) => {
 
 // LOGUEAR USUARIO
 router.post("/login", (req, res, next) => {
-  console.log(req.body.user, "user");
   const userName = req.body.user;
   const password = req.body.password;
   let loadedUser;
-
-  console.log(userName, password, "valores");
 
   knex("users")
     .leftJoin("user_rols", "user_rols.idUser", "users.id")
@@ -93,7 +89,6 @@ router.post("/login", (req, res, next) => {
       }
 
       loadedUser = user;
-      console.log(loadedUser, "user");
       var hash = user.password;
       hash = hash.replace(/^\$2y(.+)$/i, "$2a$1");
       return bcrypt.compare(password, hash);
