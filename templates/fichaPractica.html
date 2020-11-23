@@ -4,6 +4,7 @@
     <title>Ficha Practica</title>
     <style>
       body {
+        margin: 50px;
         font-size: 14px;
       }
       table {
@@ -70,8 +71,8 @@
   </head>
   <body>
     <div class="cabecera">
-      <img src="./images/geLogo.png" class="logo" />
-      <img src="./images/dgt.png" class="logo2" />
+      <img src="{{ geLogo }}" class="logo" />
+      <img src="{{ dgtLogo }}" class="logo2" />
     </div>
     <div class="title">FICHA ALUMNO - FORMACIÓN PRÁCTICA</div>
 
@@ -222,7 +223,7 @@
           <td style="width: 50%; height: 80px">
             <div>
               <span style="display: block">Firma del Director</span>
-              <img width="80px" src="./images/firmaDirector.png" />
+              <img width="80px" src="{{ firmaDirector }}" />
             </div>
           </td>
           <td style="width: 50%; height: 80px">

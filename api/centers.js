@@ -203,7 +203,6 @@ router.get(
       startDate = null,
       endDate = null,
       orderBy = null,
-      orderDir = null,
       perPage = 10,
       page = 1,
     } = req.query;
