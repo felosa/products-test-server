@@ -100,10 +100,6 @@ router.post("/login", (req, res, next) => {
         throw error;
       }
 
-      // if (loadedUser.role === "ROLE_STUDENT") {
-      //   knex("students");
-      // }
-
       const token = jwt.sign(
         {
           email: loadedUser.email,
@@ -127,6 +123,8 @@ router.post("/login", (req, res, next) => {
 router.get("/isLoged/:token", (req, res, next) => {
   // check header or url parameters or post parameters for token
   var token = req.params.token || req.query.token;
+
+  console.log(token, "viene el token");
   if (!token) {
     return res.status(401).json({ message: "Must pass token" });
   }
@@ -136,10 +134,18 @@ router.get("/isLoged/:token", (req, res, next) => {
     console.log(user.userId);
     //return user using the id from w/in JWTToken
     knex("users")
-      .where("id", user.userId)
+      .leftJoin("user_rols", "user_rols.idUser", "users.id")
+      .select(
+        "users.id as idUser",
+        "user",
+        "password",
+        "user_rols.role",
+        "user_rols.idEntity as id"
+      )
+      .where("users.id", user.userId)
       .first()
       .then((response) => {
-        console.log(response);
+        console.log(response, "este es el response");
         // user = utils.getCleanUser(user);
         //Note: you can renew token by creating new token(i.e.
         //refresh it)w/ new expiration time at this point, but I’m
@@ -152,4 +158,6 @@ router.get("/isLoged/:token", (req, res, next) => {
       });
   });
 });
+
+
 module.exports = router;
