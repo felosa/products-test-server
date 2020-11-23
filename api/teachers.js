@@ -280,6 +280,7 @@ router.get(
           "teachers.lastName2",
           "teachers.dni",
           "teachers.phone",
+          "teachers.password",
           "teachers.email",
           "teachers.birthday",
           "teachers.teacherSignature",
@@ -302,11 +303,19 @@ router.get(
         .first();
 
       return Promise.all([teacherQuery, rolQuery])
-        .then(([teacher, rol]) => {
+        .then(async ([teacher, rol]) => {
           if (!teacher) {
             return res.status(401).send("Not found");
           }
+          const userQuery = await knex("users")
+            .select("users.user")
+            .where("id", rol.idUser)
+            .first()
+            .then((response) => response);
+
+          console.log(userQuery.user, "query user id");
           teacher["rol"] = rol;
+          teacher["user"] = userQuery.user;
           return res.json(teacher);
         })
         .catch((error) => {
@@ -331,7 +340,7 @@ router.post(
     body("dni"),
     body("phone"),
     body("email"),
-    body("birthday"),
+    body("birthday").toDate(),
     body("password"),
     body("teacherSignature"),
   ],
@@ -343,85 +352,86 @@ router.post(
 
     const data = matchedData(req, { includeOptionals: true });
 
-    bcrypt.genSalt(10).then((salt, err) => {
-      if (err) {
-        this.logger.logError(err, "registerUser");
+    let newPassword = null;
 
-        reject(err);
-      }
-
-      bcrypt.hash(data.dni, salt).then((hash, err) => {
+    if (data.dni) {
+      newPassword = await bcrypt.genSalt(10).then((salt, err) => {
         if (err) {
           this.logger.logError(err, "registerUser");
 
           reject(err);
         }
 
-        var teacherQuery = new Promise((resolve) => {
-          knex("teachers")
-            .insert({
-              firstName: data.firstName,
-              lastName1: data.lastName1,
-              lastName2: data.lastName2,
-              dni: data.dni,
-              phone: data.phone,
-              email: data.email,
-              birthday: data.birthday,
-              password: data.dni,
-              teacherSignature: data.teacherSignature,
-              idCenter: data.idCenter,
-              created_at: new Date(),
-              updated_at: new Date(),
-            })
-            .then((teacherID) => {
-              resolve(teacherID);
-            })
-            .catch((error) => {
-              console.log("no lo ha guardado por fallo del teacher");
-              resolve();
-            });
-        });
+        return bcrypt.hash(data.dni, salt).then((hash, err) => {
+          if (err) {
+            this.logger.logError(err, "registerUser");
 
-        console.log(hash, "contrasena");
+            reject(err);
+          }
 
-        var userQuery = new Promise((resolve) => {
-          knex("users")
-            .insert({
-              user: data.email,
-              password: hash,
-              created_at: new Date(),
-              updated_at: new Date(),
-            })
-            .then((userID) => {
-              console.log(userID, "id del user");
-              resolve(userID);
-            })
-            .catch((error) => {
-              console.log("no lo ha guardado por fallo del user");
-              resolve();
-            });
-        });
-        console.log(userQuery, "userQuery");
-        // Cuando las anteriores se han creado, meter el id del usuario en idUser, y el id del centro en idEntity
-
-        return Promise.all([teacherQuery, userQuery]).then((results) => {
-          console.log(results, "resultados finales");
-
-          knex("user_rols")
-            .insert({
-              idUser: results[1], // id de Usuario
-              idEntity: results[0], // id de Teacher
-              role: "ROLE_TEACHER",
-              created_at: new Date(),
-              updated_at: new Date(),
-            })
-            .then((response) => {
-              return res.json({
-                results: response,
-              });
-            });
+          return hash;
         });
       });
+    }
+
+    var teacherQuery = new Promise((resolve) => {
+      knex("teachers")
+        .insert({
+          firstName: data.firstName,
+          lastName1: data.lastName1,
+          lastName2: data.lastName2,
+          dni: data.dni,
+          phone: data.phone,
+          email: data.email,
+          birthday: data.birthday,
+          password: data.dni,
+          teacherSignature: data.teacherSignature,
+          idCenter: data.idCenter,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .then((teacherID) => {
+          resolve(teacherID);
+        })
+        .catch((error) => {
+          console.log("no lo ha guardado por fallo del teacher");
+          resolve();
+        });
+    });
+
+    var userQuery = new Promise((resolve) => {
+      knex("users")
+        .insert({
+          user: data.email,
+          password: newPassword,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .then((userID) => {
+          console.log(userID, "id del user");
+          resolve(userID);
+        })
+        .catch((error) => {
+          console.log("no lo ha guardado por fallo del user");
+          resolve();
+        });
+    });
+    // Cuando las anteriores se han creado, meter el id del usuario en idUser, y el id del centro en idEntity
+
+    return Promise.all([teacherQuery, userQuery]).then((results) => {
+      knex("user_rols")
+        .insert({
+          idUser: results[1], // id de Usuario
+          idEntity: results[0], // id de Teacher
+          role: "ROLE_TEACHER",
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .then((response) => {
+          return res.json({
+            results: response,
+          });
+        });
     });
   }
 );
@@ -440,7 +450,8 @@ router.post(
     body("password"),
     body("phone"),
     body("email"),
-    body("birthday"),
+    body("user"),
+    body("birthday").toDate(),
     body("teacherSignature"),
   ],
   async (req, res) => {
@@ -454,115 +465,73 @@ router.post(
 
     const data = matchedData(req, { includeOptionals: true });
 
+    let newPassword = null;
+
     if (data.password) {
-      bcrypt.genSalt(10).then((salt, err) => {
+      newPassword = await bcrypt.genSalt(10).then((salt, err) => {
         if (err) {
           this.logger.logError(err, "registerUser");
 
           reject(err);
         }
 
-        bcrypt.hash(data.password, salt).then((hash, err) => {
+        return bcrypt.hash(data.password, salt).then((hash, err) => {
           if (err) {
             this.logger.logError(err, "registerUser");
 
             reject(err);
           }
 
-          var teacherQuery = new Promise((resolve) => {
-            knex("teachers")
-              .update({
-                firstName: data.firstName,
-                lastName1: data.lastName1,
-                lastName2: data.lastName2,
-                dni: data.dni,
-                phone: data.phone,
-                email: data.email,
-                birthday: data.birthday,
-                password: data.password,
-                teacherSignature: data.teacherSignature,
-                idCenter: data.centerID,
-                updated_at: new Date(),
-              })
-              .where("id", data.ID)
-              .then((result) => {
-                if (result > 0) {
-                  return res.send("Updated");
-                }
-                return res.status(404).send("Not found");
-              })
-              .catch((err) => {
-                return res.status(500).send(err);
-              });
-          });
-
-          var userQuery = new Promise((resolve) => {
-            knex("users")
-              .update({
-                // pasar para el user a coger la inicial del nombre y el priemr apellido
-                user: data.email,
-                password: hash,
-                created_at: new Date(),
-                updated_at: new Date(),
-              })
-              .where("id", data.rol.idUser)
-              .then((userID) => {
-                console.log(userID, "id del user");
-                resolve(userID);
-              })
-              .catch((error) => {
-                console.log("no lo ha guardado por fallo del user");
-                resolve();
-              });
-          });
+          return hash;
         });
       });
-    } else {
-      var teacherQuery = new Promise((resolve) => {
-        knex("teachers")
-          .update({
-            firstName: data.firstName.toUpperCase(),
-            lastName1: data.lastName1.toUpperCase(),
-            lastName2: data.lastName2.toUpperCase(),
-            dni: data.dni.toUpperCase(),
-            phone: data.phone,
-            email: data.email,
-            birthday: data.birthday,
-            password: data.password,
-            teacherSignature: data.teacherSignature,
-            idCenter: data.idCenter,
-            updated_at: new Date(),
-          })
-          .where("id", data.ID)
-          .then((result) => {
-            if (result > 0) {
-              return res.send("Updated");
-            }
-            return res.status(404).send("Not found");
-          })
-          .catch((err) => {
-            return res.status(500).send(err);
-          });
-      });
-
-      var userQuery = new Promise((resolve) => {
-        knex("users")
-          .update({
-            user: data.email,
-            created_at: new Date(),
-            updated_at: new Date(),
-          })
-          .where("id", data.identityID)
-          .then((userID) => {
-            console.log(userID, "id del user");
-            resolve(userID);
-          })
-          .catch((error) => {
-            console.log("no lo ha guardado por fallo del user");
-            resolve();
-          });
-      });
     }
+
+    var teacherQuery = new Promise((resolve) => {
+      knex("teachers")
+        .update({
+          firstName: data.firstName,
+          lastName1: data.lastName1,
+          lastName2: data.lastName2,
+          dni: data.dni,
+          phone: data.phone,
+          email: data.email,
+          birthday: data.birthday,
+          password: data.password,
+          teacherSignature: data.teacherSignature,
+          idCenter: data.centerID,
+          updated_at: new Date(),
+        })
+        .where("id", data.ID)
+        .then((result) => {
+          if (result > 0) {
+            return res.send("Updated");
+          }
+          return res.status(404).send("Not found");
+        })
+        .catch((err) => {
+          return res.status(500).send(err);
+        });
+    });
+
+    var userQuery = new Promise((resolve) => {
+      knex("users")
+        .update({
+          // pasar para el user a coger la inicial del nombre y el priemr apellido
+          user: data.user,
+          password: data.password ? newPassword : "",
+          updated_at: new Date(),
+        })
+        .where("id", data.rol.idUser)
+        .then((userID) => {
+          console.log(userID, "id del user");
+          resolve(userID);
+        })
+        .catch((error) => {
+          console.log("no lo ha guardado por fallo del user");
+          resolve();
+        });
+    });
 
     return Promise.all([teacherQuery, userQuery]).then((results) => {
       console.log(results, "resultados finales");
