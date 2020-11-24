@@ -144,21 +144,30 @@ const exportPayments = async (res, getQueryPayments) => {
   //   .select("students.firstName as Nombre", "students.lastName1 as Apellido")
   //   .where("students.id", studentID);
 
-  var results = await getQueryPayments.select(
-    "students.firstName as Nombre",
-    "students.lastName1 as Apellido",
-    "students.lastName2 as Apellido 2",
-    "students.dni as DNI",
-    "payments.date as Fecha",
-    "payments.description as Descripción",
-    "payments.paymentType as F. Pago",
-    "payments.quantity as importe",
-    "payments.type as Tipo"
-  );
-  // .leftJoin("students", "students.id", "payments.idStudent");
+  var results = await getQueryPayments
+    .select(
+      "payments.date as Fecha",
+      "students.firstName as Nombre",
+      "students.lastName1",
+      "students.lastName2",
+      "students.dni as DNI",
+      "students.wayType",
+      "students.wayName",
+      "students.wayNumber",
+      "students.block",
+      "students.floor",
+      "students.door",
+      "students.postalCode",
+      "students.city",
+      "payments.description as Descripción",
+      "payments.paymentType",
+      "payments.quantity as importe",
+      "payments.type as Tipo",
+      "courses.permission"
+    )
+    .leftJoin("courses", "courses.idStudent", "students.id");
 
   const formatResult = results.map((elem) => {
-    elem["Fecha"] = moment(elem["Fecha"]).format("DD/MM/YYYY");
     if (elem["Tipo"] === "Cargo") {
       elem["Importe Cargo"] = elem["importe"];
       elem["Importe"] = 0;
@@ -166,10 +175,21 @@ const exportPayments = async (res, getQueryPayments) => {
       elem["Importe Cargo"] = 0;
       elem["Importe"] = elem["importe"];
     }
-    delete elem["importe"];
-    elem["IVA"] = "i";
-
-    return elem;
+    const newElem = {
+      "Serie Factura": "",
+      Fecha: moment(elem["Fecha"]).format("DD/MM/YYYY"),
+      DNI: elem.DNI,
+      Cliente: `${elem.Nombre} ${elem.lastName1} ${elem.lastName2}`,
+      Dirección: `${elem.wayType} ${elem.wayName} ${elem.wayNumber} ${elem.block} ${elem.floor} ${elem.door}`,
+      Localidad: `${elem.postalCode} ${elem.city}`,
+      "Código artículo": "",
+      Descripción: `${elem.permission} ${elem["Descripción"]}`,
+      "F. Pago": elem["paymentType"],
+      Importe: elem["Importe"],
+      IVA: "i",
+      "Importe Cargo": elem["Importe Cargo"],
+    };
+    return newElem;
   });
 
   return res.json({
@@ -564,6 +584,5 @@ router.post(
     });
   }
 );
-
 
 module.exports = router;

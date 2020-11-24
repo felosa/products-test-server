@@ -134,7 +134,7 @@ router.get(
       )
       .leftJoin("teachers", "teachers.id", "generated_classes.idTeacher")
       .where("teachers.id", teacherID);
-
+    console.log(startDate, endDate, "fechas");
     if (null !== startDate) {
       getTeacherClassesQuery.where(
         "generated_classes.date",
@@ -164,21 +164,6 @@ router.get(
       )
       .count("*", { as: "Unidades" })
       .groupBy("teachers.id", "class_types.id");
-
-    // const formatResult = results.map((elem) => {
-    //   elem["Fecha"] = moment(elem["Fecha"]).format("DD/MM/YYYY");
-    //   if (elem["Tipo"] === "Cargo") {
-    //     elem["Importe Cargo"] = elem["importe"];
-    //     elem["Importe"] = 0;
-    //   } else {
-    //     elem["Importe Cargo"] = 0;
-    //     elem["Importe"] = elem["importe"];
-    //   }
-    //   delete elem["importe"];
-    //   elem["IVA"] = "i";
-
-    //   return elem;
-    // });
 
     return res.json({
       teacherName: `${teacher[0]["Nombre"]}-${teacher[0]["Apellido"]}`,

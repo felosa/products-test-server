@@ -340,17 +340,24 @@ const exportPayments = async (res, getQueryPayments, studentID) => {
       "students.lastName1",
       "students.lastName2",
       "students.dni as DNI",
+      "students.wayType",
+      "students.wayName",
+      "students.wayNumber",
+      "students.block",
+      "students.floor",
+      "students.door",
+      "students.postalCode",
+      "students.city",
       "payments.description as Descripción",
-      "payments.paymentType as F. Pago",
+      "payments.paymentType",
       "payments.quantity as importe",
-      "payments.type as Tipo"
+      "payments.type as Tipo",
+      "courses.permission"
     )
-    .leftJoin("students", "students.id", "payments.idStudent");
+    .leftJoin("students", "students.id", "payments.idStudent")
+    .leftJoin("courses", "courses.idStudent", "students.id");
 
   const formatResult = results.map((elem) => {
-    elem["Serie Factura"];
-    elem["Fecha"] = moment(elem["Fecha"]).format("DD/MM/YYYY");
-    elem["Cliente"] = `${elem.Nombre} ${elem.lastName1} ${elem.lastName2}`;
     if (elem["Tipo"] === "Cargo") {
       elem["Importe Cargo"] = elem["importe"];
       elem["Importe"] = 0;
@@ -358,10 +365,21 @@ const exportPayments = async (res, getQueryPayments, studentID) => {
       elem["Importe Cargo"] = 0;
       elem["Importe"] = elem["importe"];
     }
-    delete elem["importe"];
-    elem["IVA"] = "i";
-
-    return elem;
+    const newElem = {
+      "Serie Factura": "",
+      Fecha: moment(elem["Fecha"]).format("DD/MM/YYYY"),
+      DNI: elem.DNI,
+      Cliente: `${elem.Nombre} ${elem.lastName1} ${elem.lastName2}`,
+      Dirección: `${elem.wayType} ${elem.wayName} ${elem.wayNumber} ${elem.block} ${elem.floor} ${elem.door}`,
+      Localidad: `${elem.postalCode} ${elem.city}`,
+      "Código artículo": "",
+      Descripción: `${elem.permission} ${elem["Descripción"]}`,
+      "F. Pago": elem["paymentType"],
+      Importe: elem["Importe"],
+      IVA: "i",
+      "Importe Cargo": elem["Importe Cargo"],
+    };
+    return newElem;
   });
 
   return res.json({
@@ -406,7 +424,7 @@ router.get(
       .where("payments.idStudent", studentID)
       .where("payments.active", 1)
       .orderBy("payments.date", "desc");
-
+      
     if (null !== startDate) {
       getQueryPayments.where("payments.date", ">=", new Date(startDate));
     }
@@ -507,9 +525,10 @@ router.get(
       const studentQuery = knex("students")
         .leftJoin("centers", "centers.id", "students.idCenter")
         .select(
-          "students.id",
+          "students.id as studentID",
           "students.registerNumber",
           "students.dni",
+          "students.password",
           "students.dniExpiration",
           "students.firstName",
           "students.lastName1",
@@ -555,34 +574,32 @@ router.get(
           "courses.practice",
           "courses.practiceSent",
           "courses.practiceAdvice",
-          "courses.idTariff as tariffID"
+          "courses.idTariff as tariffID",
+          "rol.role",
+          "rol.idUser as userID",
+          "user.user as user",
+          "classes.quantity as classes"
         )
         .where("students.id", studentID)
         .first()
         // SELECCIONAR ROL?
         .leftJoin("user_rols as rol", "students.id", "rol.idEntity")
+        .leftJoin("users as user", "rol.id", "user.id")
         .leftJoin("courses", "courses.idStudent", "students.id")
+        .leftJoin(
+          "student_class_bags as classes",
+          "classes.idStudent",
+          "students.id"
+        )
         .where("students.id", studentID)
         .first();
 
-      const rolQuery = knex("user_rols")
-        .leftJoin("users", "users.id", "user_rols.idUser")
-        .select("role", "idUser")
-        .where("idEntity", studentID)
-        .first();
-
-      const classBagQuery = knex("student_class_bags")
-        .select("quantity")
-        .where("idStudent", studentID)
-        .first();
-
-      return Promise.all([studentQuery, rolQuery, classBagQuery])
-        .then(([student, rol, classes]) => {
+      return Promise.all([studentQuery])
+        .then(([student]) => {
           if (!student) {
             return res.status(401).send("Not found");
           }
-          student["rol"] = rol;
-          student["classes"] = classes.quantity;
+
           return res.json(student);
         })
         .catch((error) => {
