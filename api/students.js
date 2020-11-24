@@ -335,11 +335,11 @@ const exportPayments = async (res, getQueryPayments, studentID) => {
 
   var results = await getQueryPayments
     .select(
-      "students.firstName as Nombre",
-      "students.lastName1 as Apellido",
-      "students.lastName2 as Apellido 2",
-      "students.dni as DNI",
       "payments.date as Fecha",
+      "students.firstName as Nombre",
+      "students.lastName1",
+      "students.lastName2",
+      "students.dni as DNI",
       "payments.description as Descripción",
       "payments.paymentType as F. Pago",
       "payments.quantity as importe",
@@ -348,7 +348,9 @@ const exportPayments = async (res, getQueryPayments, studentID) => {
     .leftJoin("students", "students.id", "payments.idStudent");
 
   const formatResult = results.map((elem) => {
+    elem["Serie Factura"];
     elem["Fecha"] = moment(elem["Fecha"]).format("DD/MM/YYYY");
+    elem["Cliente"] = `${elem.Nombre} ${elem.lastName1} ${elem.lastName2}`;
     if (elem["Tipo"] === "Cargo") {
       elem["Importe Cargo"] = elem["importe"];
       elem["Importe"] = 0;
@@ -936,6 +938,5 @@ router.post(
     });
   }
 );
-
 
 module.exports = router;

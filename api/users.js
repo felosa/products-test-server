@@ -130,8 +130,10 @@ router.get("/isLoged/:token", (req, res, next) => {
   }
   // Check token that was passed by decoding token using secret
   jwt.verify(token, "somesupersecretsecret", function (err, user) {
-    if (err) throw err;
-    console.log(user.userId);
+    console.log(err, "error");
+    if (err) {res.json({
+      user: "",
+    })};
     //return user using the id from w/in JWTToken
     knex("users")
       .leftJoin("user_rols", "user_rols.idUser", "users.id")
@@ -158,6 +160,5 @@ router.get("/isLoged/:token", (req, res, next) => {
       });
   });
 });
-
 
 module.exports = router;
