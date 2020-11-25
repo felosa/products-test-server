@@ -92,14 +92,10 @@ router.post(
       startHour = null,
     } = data;
 
-    console.log(centerID, "center ID");
-
     const centerMaxPrice = await knex("centers")
       .select("centers.maxPrice")
       .where("centers.id", centerID)
       .first();
-
-    console.log(centerMaxPrice, "maxPrice center");
 
     let reserved = studentID ? 1 : 0;
 
@@ -173,11 +169,108 @@ router.post(
   }
 );
 
+// CREAR VARIAS CLASES A LA VEZ
+router.post(
+  "/create-multiple",
+  [
+    body("idCenter").toInt(),
+    body("teacherID").toInt(),
+    body("startDate").toDate(),
+    body("startHour"),
+    body("endDate").toDate(),
+    body("endHour"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const data = matchedData(req, { includeOptionals: true });
+
+    let {
+      idCenter = null,
+      teacherID = null,
+      startDate = null,
+      startHour = null,
+      endDate = null,
+      endHour = null,
+    } = data;
+
+    console.log(startDate, "startDate");
+    console.log(data, "data me viene");
+
+    // Calculo el maximo precio de una clase para el centro
+    const centerMaxPrice = await knex("centers")
+      .select("centers.maxPrice")
+      .where("centers.id", idCenter)
+      .first();
+
+    // Traigo las horas a las que el profesor va a dar clase
+
+    const teacherTimes = await knex("teacher_schedules")
+      .leftJoin("teachers", "teacher_schedules.idTeacher", "teachers.id")
+      .leftJoin("centers", "teachers.idCenter", "centers.id")
+      .where("teacher_schedules.active", 1)
+      .andWhere("teacher_schedules.idTeacher", teacherID)
+      .andWhere("teacher_schedules.hour", ">=", startHour)
+      .andWhere("teacher_schedules.hour", "<=", endHour);
+
+    if (teacherTimes.length == 0) {
+      return res.json({ result: "No hay clases nuevas" });
+    }
+
+    const classesToInsert = [];
+    const finalDay = moment(endDate).add(1, "days");
+    for (
+      let i = moment(startDate).format("YYYY-MM-DD");
+      i < moment(finalDay).format("YYYY-MM-DD");
+      i = moment(i).add(1, "days").format("YYYY-MM-DD")
+    ) {
+      console.log(moment(i).day(), "dia que guardare fechas");
+      if (moment(i).day() === 6 || moment(i).day() === 0) {
+        console.log(i, "es finde y no guardo fechas");
+      } else {
+        teacherTimes.length > 0 &&
+          teacherTimes.forEach(async (time) => {
+            console.log(time.hour, "hora dentro de cada dia");
+            const newClass = {
+              price: centerMaxPrice.maxPrice,
+              reserved: 0,
+              idClassType: 1,
+              startHour: time.hour,
+              date: i,
+              idTeacher: teacherID,
+              created_at: new Date(),
+              updated_at: new Date(),
+            };
+            classesToInsert.push(newClass);
+          });
+        console.log(i, "dia");
+      }
+    }
+    if (classesToInsert.length > 0) {
+      console.log(classesToInsert, "clases a insertar");
+      return await knex("generated_classes")
+        .insert(classesToInsert)
+        .then((res) => {
+          console.log("introducida", res);
+          return res.json({ message: "Creadas" });
+        })
+        .catch((err) => {
+          return res.json({ result: "error" });
+        });
+    } else {
+      return "No hay clases nuevas";
+    }
+  }
+);
+
 // EDIT CLASS
 router.post(
-  "/:ID",
+  "/edit/:classID",
   [
-    param("ID").isInt().toInt(),
+    param("classID").isInt().toInt(),
     body("idClassType").toInt(),
     body("idTeacher").toInt(),
     body("studentID"),
@@ -193,12 +286,13 @@ router.post(
     const data = matchedData(req, { includeOptionals: true });
 
     let {
+      classID = null,
       centerID = null,
       idClassType = null,
       idTeacher = null,
       studentID = null,
       price = null,
-      startDate = null,
+      date = null,
       startHour = null,
     } = data;
 
@@ -249,7 +343,7 @@ router.post(
         });
       }
     }
-
+    console.log(idClassType, "tipo de clase");
     knex("generated_classes")
       .update({
         idStudent: studentID,
@@ -257,11 +351,13 @@ router.post(
         reserved: reserved,
         idClassType: idClassType,
         startHour: startHour,
-        date: startDate,
+        date: date,
         idTeacher: idTeacher,
         updated_at: new Date(),
       })
+      .where("generated_classes.id", classID)
       .then(([newID]) => {
+        console.log("la cambia");
         // knex("practical_classes")
         //   .update({
         //     idGeneratedClass: newID,
@@ -275,56 +371,6 @@ router.post(
       .catch((err) => {
         return res.status(500).send(err);
       });
-  }
-);
-
-// CREAR VARIAS CLASES A LA VEZ
-router.post(
-  "/create-multiple",
-  [
-    body("idCenter").toInt(),
-    body("teacherID").toInt(),
-    body("startDate").toDate(),
-    body("startHour"),
-    body("endDate").toDate(),
-    body("endHour"),
-  ],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    }
-    const data = matchedData(req, { includeOptionals: true });
-
-    let {
-      idCenter = null,
-      teacherID = null,
-      startDate = null,
-      startHour = null,
-      endDate = null,
-      endHour = null,
-    } = data;
-
-    // knex("generated_classes")
-    //   .insert({
-    //     idClassType: idClassType,
-    //     startHour: startHour,
-    //     date: startDate,
-    //     idTeacher: idTeacher,
-    //     idStudent: idStudent,
-    //     reserved: 0,
-    //     price: 20,
-    //     created_at: new Date(),
-    //     updated_at: new Date(),
-    //   })
-    //   .then(([newID]) => {
-    //     return res.json({ newID });
-    //   })
-    //   .catch((err) => {
-    //     return res.status(500).send(err);
-    //   });
-
-    return "Generadas";
   }
 );
 

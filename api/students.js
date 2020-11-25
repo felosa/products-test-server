@@ -169,7 +169,10 @@ router.get(
             elem.lastName1 ? elem.lastName1 : ""
           } ${elem.lastName2 ? elem.lastName2 : ""} ${elem.dni}`;
           elem["name"] = name;
-          return elem;
+          return {
+            id: elem.id,
+            studentName: name,
+          };
         });
         return res.json({
           results: finalResults,
@@ -424,7 +427,7 @@ router.get(
       .where("payments.idStudent", studentID)
       .where("payments.active", 1)
       .orderBy("payments.date", "desc");
-      
+
     if (null !== startDate) {
       getQueryPayments.where("payments.date", ">=", new Date(startDate));
     }

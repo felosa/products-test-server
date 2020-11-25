@@ -137,30 +137,35 @@ router.post(
   }
 );
 
-// DISABLE HOW
-router.post("/:ID", [param("ID").isInt().toInt()], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() });
+// EDIT EXAM
+router.post(
+  "/edit-exam/:examID",
+  [param("examID").isInt().toInt(), body("registerNumber"), body("date")],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const data = matchedData(req, { includeOptionals: true });
+
+    knex("exams")
+      .update({
+        registerNumber: data.registerNumber,
+        date: moment(data.date).format("YYYY-MM-DD"),
+        updated_at: new Date(),
+      })
+      .where("id", data.examID)
+      .then((result) => {
+        if (result > 0) {
+          return res.send(`Updated`);
+        }
+        return res.status(404).send("Not found");
+      })
+      .catch((err) => {
+        return res.status(500).send(err);
+      });
   }
-
-  const data = matchedData(req, { includeOptionals: true });
-
-  knex("hows")
-    .update({
-      active: 0,
-      updated_at: new Date(),
-    })
-    .where("id", data.ID)
-    .then((result) => {
-      if (result > 0) {
-        return res.send(`Updated`);
-      }
-      return res.status(404).send("Not found");
-    })
-    .catch((err) => {
-      return res.status(500).send(err);
-    });
-});
+);
 
 module.exports = router;
