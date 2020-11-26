@@ -21,14 +21,6 @@ router.get(
     query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
     query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
     query("page").isInt({ min: 1 }).toInt().optional(),
-    // query("firstName").optional(),
-    // query("lastName").optional(),
-    // query("jobTitle").optional(),
-    // query("companyName").optional(),
-    // query("countryName").optional(),
-    // query("countryID").optional(),
-    // query("regionName").optional(),
-    // query("regionID").optional(),
   ],
   // defaultGetValidators,
   async (req, res) => {
@@ -83,7 +75,7 @@ router.get(
 router.get("/:examID", [param("examID").isInt().toInt()], async (req, res) => {
   try {
     const { examID } = matchedData(req);
-    var vehicleQuery = knex("exams")
+    var examQuery = knex("exams")
       .leftJoin("centers", "centers.id", "exams.idCenter")
       .select(
         "exams.id",
@@ -107,6 +99,56 @@ router.get("/:examID", [param("examID").isInt().toInt()], async (req, res) => {
     return res.status(500).send("Error");
   }
 });
+
+// GET STUDENTS FOR 1 THEORY EXAM
+router.get(
+  "/theory-students/:examID",
+  [param("examID").isInt().toInt()],
+  async (req, res) => {
+    try {
+      const { examID } = matchedData(req);
+      console.log(examID, "examen");
+
+      var studentsQuery = knex("students")
+        .select(
+          "students.id as id",
+          "students.firstName",
+          "students.lastName1",
+          "students.lastName2",
+          "student_exams.firstTime",
+          "student_exams.postponed",
+          "student_exams.result"
+        )
+        .leftJoin("student_exams", "student_exams.idStudent", "students.id")
+        // .lefJoin("exams", "exams.id", "student_exams.idExam")
+        .where("student_exams.idExam", examID)
+        .then((result) => {
+          const formatedResult = result.map((elem, index) => {
+            elem.number = index + 1;
+            elem.studentName = `${elem.firstName} ${elem.lastName1} ${elem.lastName2}`;
+            if (elem.postponed) {
+              elem["type"] = "Pendiente";
+            } else {
+              if (elem.firstTime) {
+                elem["type"] = "Nuevo";
+              } else {
+                elem["type"] = "Repetidor";
+              }
+            }
+            return elem;
+          });
+          return res.json(formatedResult);
+        })
+        .catch((error) => {
+          console.log(error);
+          return res.status(500).send("Error");
+        });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send("Error");
+    }
+  }
+);
 
 // CREAR EXAM
 router.post(
@@ -165,6 +207,256 @@ router.post(
       .catch((err) => {
         return res.status(500).send(err);
       });
+  }
+);
+
+const generateForNewStudents = (newStudents, examID) => {
+  newStudents.forEach(async (student) => {
+    // BUSCO TARIFA PARA SABER PRECIOS
+    const tariff = await knex("courses")
+      .leftJoin("tariffs", "tariffs.id", "courses.idTariff")
+      .select(
+        "tariffs.pvpFirstProcedure",
+        "tariffs.pvpRate",
+        "tariffs.pvpFirstTheoricExam"
+      )
+      .where("courses.idStudent", student.id)
+      .first()
+      .then((result) => {
+        return result;
+      })
+      .catch((err) => {
+        return "No se encuentra";
+      });
+
+    await knex("student_exams")
+      .insert({
+        idExam: examID,
+        idStudent: student.id,
+        firstTime: 1,
+        result: "----",
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+      .then((result) => {
+        console.log("Se guarda el examen");
+      });
+
+    const payments = [
+      {
+        idStudent: student.id,
+        description: "Primera Tramitación",
+        quantity: tariff.pvpFirstProcedure,
+        type: "Cargo",
+        date: new Date(),
+        paymentType: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        idStudent: student.id,
+        description: "Tasas",
+        quantity: tariff.pvpRate,
+        type: "Cargo",
+        date: new Date(),
+        paymentType: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        idStudent: student.id,
+        description: "Primer Examen Teórico",
+        quantity: tariff.pvpFirstTheoricExam,
+        type: "Cargo",
+        date: new Date(),
+        paymentType: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ];
+
+    await knex("payments")
+      .insert(payments)
+      .then((result) => console.log("se guardan los pagos"))
+      .catch((result) => console.log("NO se guardan los pagos"));
+  });
+};
+const generateForRepeatStudents = (newStudents, examID) => {
+  newStudents.forEach(async (student) => {
+    // BUSCO TARIFA PARA SABER PRECIOS
+    const tariff = await knex("courses")
+      .leftJoin("tariffs", "tariffs.id", "courses.idTariff")
+      .select(
+        "tariffs.pvpRate",
+        "tariffs.pvpTheoricExam",
+        "tariffs.pvpProcedure"
+      )
+      .where("courses.idStudent", student.id)
+      .first()
+      .then((result) => {
+        return result;
+      })
+      .catch((err) => {
+        return "No se encuentra";
+      });
+
+    await knex("student_exams")
+      .insert({
+        idExam: examID,
+        idStudent: student.id,
+        firstTime: 0,
+        result: "----",
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+      .then((result) => {
+        console.log("Se guarda el examen");
+      });
+
+    const theoryExams = await knex("student_exams")
+      .leftJoin("exams", "exams.id", "student_exams.idExam")
+      .where("exams.type", "Teórico")
+      .andWhere("student_exams.result", "NO APTO")
+      .andWhere("idStudent", student.id)
+      .count("* as sum")
+      .then((result) => {
+        return result[0].sum;
+      });
+
+    const practicalExams = await knex("student_exams")
+      .leftJoin("exams", "exams.id", "student_exams.idExam")
+      .where("exams.type", "Práctico")
+      .andWhere("student_exams.result", "NO APTO")
+      .andWhere("idStudent", student.id)
+      .count("* as sum")
+      .then((result) => {
+        return result[0].sum;
+      });
+
+    console.log(theoryExams, practicalExams, "theory");
+
+    if ((theoryExams + practicalExams) % 2) {
+      const payments = [
+        {
+          idStudent: student.id,
+          description: "Tramitación expediente",
+          quantity: tariff.pvpProcedure,
+          type: "Cargo",
+          date: new Date(),
+          paymentType: null,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          idStudent: student.id,
+          description: "Tasas",
+          quantity: tariff.pvpRate,
+          type: "Cargo",
+          date: new Date(),
+          paymentType: null,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          idStudent: student.id,
+          description: "Examen Teórico",
+          quantity: tariff.pvpTheoricExam,
+          type: "Cargo",
+          date: new Date(),
+          paymentType: null,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      ];
+
+      await knex("payments")
+        .insert(payments)
+        .then((result) => console.log("se guardan los pagos"))
+        .catch((result) => console.log("NO se guardan los pagos"));
+    } else {
+      await knex("payments")
+        .insert({
+          idStudent: student.id,
+          description: "Examen Teórico",
+          quantity: tariff.pvpTheoricExam,
+          type: "Cargo",
+          date: new Date(),
+          paymentType: null,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .then((result) => console.log("se guardan los pagos"))
+        .catch((result) => console.log("NO se guardan los pagos"));
+    }
+  });
+};
+
+const generateForPendingStudents = (newStudents, examID) => {
+  newStudents.forEach(async (student) => {
+    // BUSCO TARIFA PARA SABER PRECIOS
+    const tariff = await knex("courses")
+      .leftJoin("tariffs", "tariffs.id", "courses.idTariff")
+      .select(
+        "tariffs.pvpFirstProcedure",
+        "tariffs.pvpRate",
+        "tariffs.pvpFirstTheoricExam"
+      )
+      .where("courses.idStudent", student.id)
+      .first()
+      .then((result) => {
+        return result;
+      })
+      .catch((err) => {
+        return "No se encuentra";
+      });
+
+    await knex("student_exams")
+      .insert({
+        idExam: examID,
+        idStudent: student.id,
+        postponed: 1,
+        result: "----",
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+      .then((result) => {
+        console.log("Se guarda el examen");
+      });
+  });
+};
+
+// GUARDAR ALUMNOS EN TEORICO
+router.post(
+  "/store-theory-students",
+  [body("students"), body("examID")],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const data = matchedData(req, { includeOptionals: true });
+
+    const {
+      idCenter = null,
+      newStudents = [],
+      repeatStudents = [],
+      pendingStudents = [],
+    } = data.students;
+
+    const { examID } = data;
+
+    console.log(idCenter, "cntro");
+    console.log(newStudents, "nuevos");
+    console.log(repeatStudents, "repetidores");
+    console.log(pendingStudents, "pendientes");
+    console.log(examID, "examen");
+
+    await generateForNewStudents(newStudents, examID);
+    await generateForRepeatStudents(repeatStudents, examID);
+    await generateForPendingStudents(pendingStudents, examID);
+
+    return res.json({ result: "Todo correcto" });
   }
 );
 
