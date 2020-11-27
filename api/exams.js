@@ -150,6 +150,53 @@ router.get(
   }
 );
 
+// GET STUDENTS FOR 1 PRACTICAL EXAM
+router.get(
+  "/practial-students/:examID",
+  [param("examID").isInt().toInt()],
+  async (req, res) => {
+    try {
+      const { examID } = matchedData(req);
+      console.log(examID, "examen");
+
+      var studentsQuery = knex("students")
+        .select(
+          "students.id as id",
+          "students.firstName",
+          "students.lastName1",
+          "students.lastName2",
+          "teachers.firstName as teacherFirstName",
+          "teachers.lastName1 as teacherLastName1",
+          "teachers.lastName2 as teacherLastName2",
+          "vehicles.enrollment",
+          "student_exams.result"
+        )
+        .leftJoin("student_exams", "student_exams.idStudent", "students.id")
+        .leftJoin("teachers", "teachers.id", "student_exams.idTeacher")
+        .leftJoin("vehicles", "vehicles.id", "student_exams.idVehicle")
+        // .lefJoin("exams", "exams.id", "student_exams.idExam")
+        .where("student_exams.idExam", examID)
+        .then((result) => {
+          const formatedResult = result.map((elem, index) => {
+            elem.number = index + 1;
+            elem.studentName = `${elem.firstName} ${elem.lastName1} ${elem.lastName2}`;
+            elem.teacherName = `${elem.teacherFirstName} ${elem.teacherLastName1} ${elem.teacherLastName2}`;
+
+            return elem;
+          });
+          return res.json(formatedResult);
+        })
+        .catch((error) => {
+          console.log(error);
+          return res.status(500).send("Error");
+        });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send("Error");
+    }
+  }
+);
+
 // EDIT 1 STUDENT RESULT
 router.post(
   "/edit-student-result/:examID",
@@ -165,23 +212,79 @@ router.post(
     const { examID, studentID, result } = data;
 
     console.log(examID, studentID, result, "me viene");
-    return res.json({ result: "llega informacion pero no hay logica" });
-    // knex("exams")
-    //   .update({
-    //     registerNumber: data.registerNumber,
-    //     date: moment(data.date).format("YYYY-MM-DD"),
-    //     updated_at: new Date(),
-    //   })
-    //   .where("id", data.examID)
-    //   .then((result) => {
-    //     if (result > 0) {
-    //       return res.send(`Updated`);
-    //     }
-    //     return res.status(404).send("Not found");
-    //   })
-    //   .catch((err) => {
-    //     return res.status(500).send(err);
-    //   });
+
+    const examStudent = await knex("student_exams")
+      .where("student_exams.idStudent", studentID)
+      .andWhere("student_exams.idExam", examID)
+      .first()
+      .then((result) => {
+        return result;
+      });
+
+    const exam = await knex("exams")
+      .where("exams.id", examID)
+      .first()
+      .then((result) => {
+        return result;
+      });
+
+    const student = await knex("students")
+      .select()
+      .where("students.id", studentID)
+      .first()
+      .then((result) => {
+        return result;
+      });
+
+    const course = await knex("courses")
+      .where("courses.idStudent", studentID)
+      .first()
+      .then((result) => {
+        return result;
+      });
+
+    // console.log(examStudent, student, exam, "examen");
+
+    if (examStudent.result === "Apto" && result === "Apto") {
+      console.log("entra en apto");
+
+      if (exam.type === "Teórico") {
+        const adviceDate = moment(new Date()).add(6, "months").format();
+        console.log(adviceDate, "dia de felicitacion");
+        console.log(exam.date, "fecha del examen");
+        await knex("courses")
+          .update({
+            theory: exam.date,
+            practiceAdvice: adviceDate,
+          })
+          .where("courses.id", course.id)
+          .then((result) => {
+            console.log("guarda teorico");
+            // Mandar sms de felicitacion
+          });
+      } else {
+        const congratulationDate = moment(new Date()).add(1, "years");
+        await knex("courses")
+          .update({
+            practice: exam.date,
+            practiceAdvice: congratulationDate,
+          })
+          .where("courses.id", course.id)
+          .then((result) => {
+            console.log("hecho");
+          });
+      }
+    }
+
+    return await knex("student_exams")
+      .where("student_exams.idStudent", studentID)
+      .andWhere("student_exams.idExam", examID)
+      .update({
+        result: result,
+      })
+      .then((result) => {
+        return res.json({ result: "hecho" });
+      });
   }
 );
 
@@ -490,6 +593,154 @@ router.post(
     await generateForNewStudents(newStudents, examID);
     await generateForRepeatStudents(repeatStudents, examID);
     await generateForPendingStudents(pendingStudents, examID);
+
+    return res.json({ result: "Todo correcto" });
+  }
+);
+
+// GUARDAR ALUMNOS EN PRACTICO
+router.post(
+  "/store-practical-students",
+  // [body("sesions"), body("examID")],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    // const data = matchedData(req, { includeOptionals: true });
+
+    // const {
+    const sesions = [
+      { teacherID: 7, students: [{ id: 1 }, { id: 1 }], vehicleID: 1 },
+      { teacherID: 1, students: [{ id: 1 }, { id: 1 }], vehicleID: 1 },
+    ];
+    const examID = 18;
+    // } = data;
+
+    await sesions.forEach(async (sesion) => {
+      sesion.students.forEach(async (student) => {
+        await knex("student_exams")
+          .insert({
+            idExam: examID,
+            idTeacher: sesion.teacherID,
+            idStudent: student.id,
+            idVehicle: sesion.vehicleID,
+            result: "----",
+          })
+          .then((res) => console.log(res));
+
+        const tariff = await knex("courses")
+          .leftJoin("tariffs", "tariffs.id", "courses.idTariff")
+          .select(
+            "tariffs.pvpFirstProcedure",
+            "tariffs.pvpRate",
+            "tariffs.pvpProcedure",
+            "tariffs.pvpPracticalExam"
+          )
+          .where("courses.idStudent", student.id)
+          .first()
+          .then((result) => {
+            return result;
+          })
+          .catch((err) => {
+            return "No se encuentra";
+          });
+
+        const theoryExams = await knex("student_exams")
+          .leftJoin("exams", "exams.id", "student_exams.idExam")
+          .where("exams.type", "Teórico")
+          .andWhere("student_exams.result", "NO APTO")
+          .andWhere("idStudent", student.id)
+          .count("* as sum")
+          .then((result) => {
+            return result[0].sum;
+          });
+
+        const practicalExams = await knex("student_exams")
+          .leftJoin("exams", "exams.id", "student_exams.idExam")
+          .where("exams.type", "Práctico")
+          .andWhere("student_exams.result", "NO APTO")
+          .andWhere("idStudent", student.id)
+          .count("* as sum")
+          .then((result) => {
+            return result[0].sum;
+          });
+
+        let payments = [];
+
+        if (theoryExams + practicalExams == 0) {
+          const payment1 = [
+            {
+              idStudent: student.id,
+              description: "Primera Tramitación",
+              quantity: tariff.pvpFirstProcedure,
+              type: "Cargo",
+              date: new Date(),
+              paymentType: null,
+            },
+            {
+              idStudent: student.id,
+              description: "Tasas",
+              quantity: tariff.pvpRate,
+              type: "Cargo",
+              date: new Date(),
+              paymentType: null,
+            },
+          ];
+
+          payments = payments.concat(payment1);
+        } else if ((theoryExams + practicalExams) % 2 == 0) {
+          const payment2 = [
+            {
+              idStudent: student.id,
+              description: "Tramitación expediente",
+              quantity: tariff.pvpProcedure,
+              type: "Cargo",
+              date: new Date(),
+              paymentType: null,
+            },
+            {
+              idStudent: student.id,
+              description: "Tasas",
+              quantity: tariff.pvpRate,
+              type: "Cargo",
+              date: new Date(),
+              paymentType: null,
+            },
+          ];
+
+          payments = payments.concat(payment2);
+        }
+
+        const payment3 = {
+          idStudent: student.id,
+          description: "Examen Práctico",
+          quantity: tariff.pvpPracticalExam,
+          type: "Cargo",
+          date: new Date(),
+          paymentType: null,
+        };
+
+        payments = payments.concat(payment3);
+
+        await knex("payments")
+          .insert(payments)
+          .then((res) => console.log("se guardan los pagos"));
+      });
+
+      // MIrar que hace esto
+      //   if ($practice == 0) {
+      //     $scb = StudentClassBag::where('idStudent', $student['id'])->first();
+
+      //     if ($student->completeCourse) {
+      //         $scb->quantity = $scb->quantity + $tariff->completeClasses;
+      //     } else {
+      //         $scb->quantity = $scb->quantity + $tariff->simpleClasses;
+      //     }
+      //     $scb->save();
+      // }
+    });
 
     return res.json({ result: "Todo correcto" });
   }
