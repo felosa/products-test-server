@@ -150,6 +150,41 @@ router.get(
   }
 );
 
+// EDIT 1 STUDENT RESULT
+router.post(
+  "/edit-student-result/:examID",
+  [param("examID").isInt().toInt(), body("result"), body("studentID")],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const data = matchedData(req, { includeOptionals: true });
+
+    const { examID, studentID, result } = data;
+
+    console.log(examID, studentID, result, "me viene");
+    return res.json({ result: "llega informacion pero no hay logica" });
+    // knex("exams")
+    //   .update({
+    //     registerNumber: data.registerNumber,
+    //     date: moment(data.date).format("YYYY-MM-DD"),
+    //     updated_at: new Date(),
+    //   })
+    //   .where("id", data.examID)
+    //   .then((result) => {
+    //     if (result > 0) {
+    //       return res.send(`Updated`);
+    //     }
+    //     return res.status(404).send("Not found");
+    //   })
+    //   .catch((err) => {
+    //     return res.status(500).send(err);
+    //   });
+  }
+);
+
 // CREAR EXAM
 router.post(
   "/",
