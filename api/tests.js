@@ -82,50 +82,55 @@ router.get(
       .where("idStudent", studentID)
       .where("testResult", 1)
       .count("*", { as: "passedTests" })
-      .offset(0);
-
-    var totalCount = await getQuery
-      .clone()
-      .count("*", { as: "totalResults" })
-      .limit(999999)
-      .offset(0);
-
-    // var results = await getQuery
-    //   .limit(perPage)
-    //   .offset((page - 1) * perPage)
-    //   .distinct(
-    //     "student_tests.idStudent",
-    //     "student_tests.idTest as id",
-    //     "student_tests.testResult",
-    //     "tests.result"
-    //   )
+      .offset(0)
+      .then((res) => {
+        return res.passedTests;
+      });
 
     var results = await getQuery
-      .limit(perPage)
-      .offset((page - 1) * perPage)
       .select(
+        knex.raw("ROW_NUMBER() OVER(ORDER BY student_tests.created_at) AS num_row"),
         // "student_tests.idStudent",
-        "student_tests.idTest as id",
+        // "student_tests.idTest as id",
         "student_tests.date",
+        "student_tests.created_at",
         "student_tests.testResult"
       )
-      .orderBy("student_tests.idTest", "desc")
       .leftJoin("tests", "tests.idTest", "student_tests.idTest")
       .where("tests.result", 1)
       .count("tests.result as result")
       .groupBy([
         "student_tests.idTest",
-        // "tests.result",
+        "tests.result",
         "student_tests.date",
+        "student_tests.created_at",
         "student_tests.testResult",
-      ]);
+      ])
+      .orderBy("student_tests.created_at", "desc")
+      .limit(perPage)
+      .offset((page - 1) * perPage);
+
+    var totalCount = await getQuery
+      .clone()
+      .count("*", { as: "totalResults" })
+      .limit(999999)
+      .offset(0)
+      .first()
+      .then((res) => {
+        return res.totalResults;
+      });
+
+    const formatResults = results.map((elem) => {
+      elem["num_row"] = elem["num_row"] * page;
+      return elem;
+    });
 
     return res.json({
       page: page || 1,
       perPage: perPage || 10,
-      totalCount: totalCount[0].totalResults,
+      totalCount: totalCount,
       results: results,
-      passed: passedTests[0].passedTests,
+      passed: passedTests,
     });
   }
 );

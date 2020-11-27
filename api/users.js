@@ -103,7 +103,7 @@ router.post("/login", (req, res, next) => {
       const token = jwt.sign(
         {
           email: loadedUser.email,
-          userId: loadedUser.id,
+          userId: loadedUser.idUser,
         },
         "somesupersecretsecret",
         { expiresIn: "3h" }
@@ -131,9 +131,13 @@ router.get("/isLoged/:token", (req, res, next) => {
   // Check token that was passed by decoding token using secret
   jwt.verify(token, "somesupersecretsecret", function (err, user) {
     console.log(err, "error");
-    if (err) {res.json({
-      user: "",
-    })};
+    if (err) {
+      res.json({
+        user: "",
+      });
+    }
+
+    console.log(user, "user");
     //return user using the id from w/in JWTToken
     knex("users")
       .leftJoin("user_rols", "user_rols.idUser", "users.id")
