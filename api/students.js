@@ -273,17 +273,19 @@ router.get(
       page = 1,
     } = req.query;
 
-    let getQueryExams = knex
+    console.log(studentID, "id studiante");
+
+    let query = knex
       .table("generated_classes")
       .where("generated_classes.idStudent", studentID);
 
-    var totalCount = await getQueryExams
+    var totalCount = await query
       .clone()
       .count("*", { as: "totalResults" })
       .limit(999999)
       .offset(0);
 
-    var results = await getQueryExams
+    var results = await query
       .limit(perPage)
       .offset((page - 1) * perPage)
       .select()

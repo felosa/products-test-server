@@ -150,15 +150,26 @@ router.get("/isLoged/:token", (req, res, next) => {
       )
       .where("users.id", user.userId)
       .first()
-      .then((response) => {
-        console.log(response, "este es el response");
+      .then(async (user) => {
+        console.log(user, "este es el user");
+        if (user.role === "ROLE_STUDENT") {
+          await knex("students")
+            .leftJoin("courses", "courses.idStudent", "students.id")
+            .select()
+            .where("students.id", user.id)
+            .first()
+            .then((result) => {
+              user.permission = result.permission;
+              user.centerID = result.idCenter;
+            });
+        }
         // user = utils.getCleanUser(user);
         //Note: you can renew token by creating new token(i.e.
         //refresh it)w/ new expiration time at this point, but I’m
         //passing the old token back.
         // var token = utils.generateToken(user);
         res.json({
-          user: response,
+          user: user,
           token: token,
         });
       });

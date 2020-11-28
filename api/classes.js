@@ -13,7 +13,11 @@ const router = express.Router();
 
 router.get(
   "/",
-  [query("teacherID").optional(), query("centerID").optional()],
+  [
+    query("teacherID").optional(),
+    query("teacherID").optional(),
+    query("centerID").optional(),
+  ],
   // defaultGetValidators,
   async (req, res) => {
     const errors = validationResult(req);
@@ -21,7 +25,7 @@ router.get(
       return res.status(422).json({ errors: errors.array() });
     }
 
-    var { teacherID = null, centerID = null } = req.query;
+    var { disponibility = null, teacherID = null, centerID = null } = req.query;
 
     var getQuery = knex
       .table("class_types")
@@ -31,6 +35,11 @@ router.get(
     if ("Todos" !== teacherID) {
       getQuery.where("teachers.id", "=", teacherID);
     }
+
+    if ("Libres" === disponibility) {
+      getQuery.where("gc.reserved", "=", 0);
+    }
+
     var results = await getQuery.select({
       id: "gc.id",
       title: "class_types.description",

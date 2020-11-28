@@ -91,7 +91,7 @@ router.get(
       .select(
         knex.raw("ROW_NUMBER() OVER(ORDER BY student_tests.created_at) AS num_row"),
         // "student_tests.idStudent",
-        // "student_tests.idTest as id",
+        "student_tests.idTest as id",
         "student_tests.date",
         "student_tests.created_at",
         "student_tests.testResult"
