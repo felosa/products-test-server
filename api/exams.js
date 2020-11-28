@@ -601,31 +601,27 @@ router.post(
 // GUARDAR ALUMNOS EN PRACTICO
 router.post(
   "/store-practical-students",
-  // [body("sesions"), body("examID")],
+  [body("sessions"), body("examID")],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
     }
 
-    // const data = matchedData(req, { includeOptionals: true });
+    const data = matchedData(req, { includeOptionals: true });
 
-    // const {
-    const sesions = [
-      { teacherID: 7, students: [{ id: 1 }, { id: 1 }], vehicleID: 1 },
-      { teacherID: 1, students: [{ id: 1 }, { id: 1 }], vehicleID: 1 },
-    ];
-    const examID = 18;
-    // } = data;
+    const { sessions = [], examID } = data;
 
-    await sesions.forEach(async (sesion) => {
-      sesion.students.forEach(async (student) => {
+    console.log(sessions, examID);
+
+    await sessions.forEach(async (session) => {
+      session.students.forEach(async (student) => {
         await knex("student_exams")
           .insert({
             idExam: examID,
-            idTeacher: sesion.teacherID,
+            idTeacher: session.teacherID,
             idStudent: student.id,
-            idVehicle: sesion.vehicleID,
+            idVehicle: session.vehicleID,
             result: "----",
           })
           .then((res) => console.log(res));
