@@ -10,15 +10,32 @@ const knex = require("../db/knex"); //the connection
 
 const router = express.Router();
 
+const PERMISSION_QUESTIONS = {
+  A1: { total: 20, need: 18 },
+  A2: { total: 20, need: 18 },
+  AM: { total: 20, need: 18 },
+  B: { total: 30, need: 27 },
+};
+
 // GET ONE RANDOM TEST
 router.get(
   "/get-random-test",
-  [param("studentID").isInt().toInt()],
+  [query("type").optional(), query("permission").optional()],
   async (req, res) => {
     try {
-      const { studentID } = matchedData(req);
-      // TENGO QUE CREAR VARIABLES PARA NUMERO DE PREGUNTAS, SI ES HARD....
-      return knex("questions")
+      const { type, permission } = matchedData(req);
+
+      const numberQuestions = PERMISSION_QUESTIONS[permission].total;
+
+      const permissionID = await knex("permissions")
+        .select("permissions.id")
+        .where("permissions.name", permission)
+        .first()
+        .then((res) => {
+          return res.id;
+        });
+
+      const query = knex("questions")
         .select({
           id: "questions.id",
           a: "questions.a",
@@ -28,12 +45,24 @@ router.get(
           img: "questions.img",
           question: "questions.question",
           correctAnswer: "questions.correctAnswer",
+          permission: "questions.permission",
+          hard: "questions.hard",
         })
-        .where("questions.permission", 1)
-        .andWhere("questions.hard", 0)
+        .where("questions.permission", permissionID);
+
+      if ("reto" === type) {
+        query.where("questions.hard", 1);
+      }
+
+      if ("error" === type) {
+        query.orderBy("questions.fails", "desc");
+      } else {
+        query.orderByRaw("RAND()");
+      }
+
+      query
         .andWhere("questions.active", 1)
-        .orderByRaw("RAND()")
-        .limit(30)
+        .limit(numberQuestions)
         .then((result) => {
           res.json({ result });
         })
@@ -78,22 +107,27 @@ router.get(
       getQuery.where("student_tests.idStudent", studentID);
     }
 
-    var passedTests = await knex("student_tests")
-      .where("idStudent", studentID)
-      .where("testResult", 1)
-      .count("*", { as: "passedTests" })
-      .offset(0)
-      .then((res) => {
-        return res.passedTests;
-      });
+    var passedTests =
+      (await knex("student_tests")
+        .where("idStudent", studentID)
+        .where("testResult", 1)
+        .count("*", { as: "passedTests" })
+        .limit(999999)
+        .offset(0)
+        .first()
+        .then((res) => {
+          return res.passedTests;
+        })) || 0;
 
     var results = await getQuery
       .select(
-        knex.raw("ROW_NUMBER() OVER(ORDER BY student_tests.created_at) AS num_row"),
+        knex.raw(
+          "ROW_NUMBER() OVER(ORDER BY student_tests.created_at) AS num_row"
+        ),
         // "student_tests.idStudent",
         "student_tests.idTest as id",
-        "student_tests.date",
-        "student_tests.created_at",
+        // "student_tests.date",
+        // "student_tests.created_at",
         "student_tests.testResult"
       )
       .leftJoin("tests", "tests.idTest", "student_tests.idTest")
@@ -110,7 +144,8 @@ router.get(
       .limit(perPage)
       .offset((page - 1) * perPage);
 
-    var totalCount = await getQuery
+    var totalCount = await knex("student_tests")
+      .where("student_tests.idStudent", studentID)
       .clone()
       .count("*", { as: "totalResults" })
       .limit(999999)
@@ -124,6 +159,8 @@ router.get(
       elem["num_row"] = elem["num_row"] * page;
       return elem;
     });
+
+    console.log(passedTests, "test aprobados");
 
     return res.json({
       page: page || 1,
@@ -148,58 +185,83 @@ router.get("/:testID", [param("testID").isInt().toInt()], async (req, res) => {
 // GUARDAR TEST
 router.post(
   "/store-test",
-  [body("studentID"), body("questions")],
+  [body("student"), body("questions")],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
     }
 
-    const { studentID = null, questions = null } = matchedData(req, {
+    const { student = null, questions = null } = matchedData(req, {
       includeOptionals: true,
     });
 
+    const numberQuestions = PERMISSION_QUESTIONS[student.permission].total;
+    const numberQuestionsNeed = PERMISSION_QUESTIONS[student.permission].need;
+
+    const lastTestId = await knex("student_tests")
+      .count("* as lastId")
+      .then(([res]) => {
+        return res.lastId;
+      });
+
+    const newIdTest = lastTestId + 1;
+
     // Comprobamos las respuestas correctas que ha tenido
-    const correctAnswerTest = questions.filter(
-      (question) => parseInt(question.answer) === question.correctAnswer
+    const correctAnswers = questions.filter(
+      (question) => parseInt(question.chosenAnswer) === question.correctAnswer
     ).length;
-    // Comprobamos el numero de respuestas para saber el tipo de permiso
-    const numberQuestions = questions.length;
+
+    console.log(correctAnswers, "/", numberQuestions, "questions");
 
     let testResult;
 
-    // Ahora hay que comprobar cuantas se necesitan para aprobar segun el tipo de permiso
-    if (
-      (correctAnswerTest > 26 && numberQuestions === 30) || // Coche
-      (correctAnswerTest > 17 && numberQuestions === 20) // Moto
-    ) {
+    // Ahora hay que comprobar si el test esta aprobado
+    if (correctAnswers >= numberQuestionsNeed) {
       testResult = 1;
     } else {
       testResult = 0;
     }
 
-    // Habra que calcular el ultimo id de test del alumno para hacer la enumeracion
+    console.log(testResult, "resultado");
 
-    // return knex("payments")
-    //   .insert({
-    //     idStudent: studentID,
-    //     description: description,
-    //     quantity: quantity,
-    //     type: type,
-    //     paymentType: paymentType,
-    //     date: new Date(),
-    //     active: 1,
-    //     created_at: new Date(),
-    //     updated_at: new Date(),
-    //   })
-    //   .then(([newID]) => {
-    //     return res.json({ newID });
-    //   })
-    //   .catch((err) => {
-    //     return res.status(500).send(err);
-    //   });
+    (await questions.length) &&
+      questions.map(async (question, index) => {
+        const answerResult =
+          parseInt(question.chosenAnswer) === question.correctAnswer ? 1 : 0;
 
-    return res.json({ hola: "hola" });
+        await knex("tests").insert({
+          idTest: newIdTest,
+          idQuestion: question.id,
+          answer: question.chosenAnswer,
+          result: answerResult,
+          created_at: new Date(),
+          updated_at: new Date(),
+        });
+
+        if (answerResult == 0) {
+          const previusFails = await knex("questions")
+            .where("questions.id", question.id)
+            .then((res) => {
+              return res[0].fails;
+            });
+
+          await knex("questions")
+            .update({ fails: previusFails + 1, updated_at: new Date() })
+            .where("questions.id", question.id);
+        }
+      });
+
+    await knex("student_tests").insert({
+      idStudent: student.id,
+      idTest: newIdTest,
+      date: new Date(),
+      testResult: testResult,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    return res.json({ hola: "Test guardad correctamente" });
   }
 );
 
