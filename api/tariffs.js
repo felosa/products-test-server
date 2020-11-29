@@ -110,6 +110,7 @@ router.get(
     }
   }
 );
+
 // GET ONE STUDENT ID
 router.get(
   "/get-tariff-payment/:studentID",
@@ -138,6 +139,40 @@ router.get(
             .where("tariffs.id", idTariff)
             .first()
             .then((result) => res.json({ result }));
+        })
+        .catch((error) => {
+          console.log(error);
+          return res.status(500).send("Error");
+        });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send("Error");
+    }
+  }
+);
+
+// GET ONE STUDENT PACKS
+router.get(
+  "/get-packs-actives/:studentID",
+  [param("studentID").isInt().toInt()],
+  async (req, res) => {
+    try {
+      const { studentID } = matchedData(req);
+
+      return knex("students")
+        .select(
+          "packs.id",
+          "packs.description",
+          "packs.price",
+          "packs.quantity"
+        )
+        .leftJoin("courses", "courses.idStudent", "students.id")
+        .leftJoin("tariffs", "tariffs.id", "courses.idTariff")
+        .leftJoin("packs", "packs.idTariff", "tariffs.id")
+        .where("students.id", studentID)
+        .andWhere("packs.active", 1)
+        .then((result) => {
+          res.json({ result });
         })
         .catch((error) => {
           console.log(error);

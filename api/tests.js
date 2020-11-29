@@ -126,7 +126,7 @@ router.get(
         ),
         // "student_tests.idStudent",
         "student_tests.idTest as id",
-        // "student_tests.date",
+        "student_tests.date",
         // "student_tests.created_at",
         "student_tests.testResult"
       )
