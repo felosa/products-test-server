@@ -96,15 +96,15 @@ function createPayment(description, total, titular, orderId, paymentId) {
 
   var obj = {
     amount: "100", // cents (in euro)
-    orderReference: '1606718240', // 10 cifras
+    orderReference: '1606718241', // 10 cifras
     merchantName: "Autius",
     merchantCode: "327234688",
     currency: CURRENCIES.EUR,
     transactionType: TRANSACTION_TYPES.AUTHORIZATION, // '0'
     terminal: "1",
     merchantURL: "http://gestion.autius.com/",
-    successURL: "http://localhost:8080/success",
-    errorURL: "http://localhost:8080/error",
+    successURL: "http://localhost:3000",
+    errorURL: "http://localhost:3000",
   };
 
   const result = redsys.makePaymentParameters(obj);
