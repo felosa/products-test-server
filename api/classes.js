@@ -15,7 +15,6 @@ router.get(
   "/",
   [
     query("teacherID").optional(),
-    query("teacherID").optional(),
     query("centerID").optional(),
   ],
   // defaultGetValidators,

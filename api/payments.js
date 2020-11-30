@@ -82,28 +82,29 @@ function createPayment(description, total, titular, orderId, paymentId) {
   const centerId = 2;
   const amount = 20;
   //SAN MIGUEL
-  REDSYS_MERCHANT_CODE_2 = 337131965;
+  REDSYS_MERCHANT_CODE_2 = "337131965";
   REDSYS_MERCHANT_CODE_SHA256_2 = "qwYpJ9faZX7HjaFt70kF3qHl/z+laldV";
 
-  const domain = `https://localhost?classId=${classId}&studentId=${studentId}&centerId=${centerId}&amount=${amount}`;
+  const domain = `http://localhost:8000/api/payments?classId=${classId}&studentId=${studentId}&centerId=${centerId}&amount=${amount}`;
 
   const MERCHANT_KEY = "sq7HjrUOBfKmC576ILgskD5srU870gJ7"; // TESTING KEY
-  const redsys = new RedSys(REDSYS_MERCHANT_CODE_SHA256_2);
+  const redsys = new RedSys(MERCHANT_KEY);
 
   const order = +new Date();
   const orderString = order.toString();
+  console.log(orderString, "order");
 
   var obj = {
     amount: "100", // cents (in euro)
-    orderReference: orderString,
+    orderReference: '1606718240', // 10 cifras
     merchantName: "Autius",
-    merchantCode: REDSYS_MERCHANT_CODE_2,
+    merchantCode: "327234688",
     currency: CURRENCIES.EUR,
     transactionType: TRANSACTION_TYPES.AUTHORIZATION, // '0'
     terminal: "1",
-    merchantURL: "",
-    successURL: domain,
-    errorURL: domain,
+    merchantURL: "http://gestion.autius.com/",
+    successURL: "http://localhost:8080/success",
+    errorURL: "http://localhost:8080/error",
   };
 
   const result = redsys.makePaymentParameters(obj);

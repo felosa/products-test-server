@@ -127,7 +127,7 @@ router.get(
         // "student_tests.idStudent",
         "student_tests.idTest as id",
         "student_tests.date",
-        // "student_tests.created_at",
+        "student_tests.created_at",
         "student_tests.testResult"
       )
       .leftJoin("tests", "tests.idTest", "student_tests.idTest")
@@ -160,7 +160,7 @@ router.get(
       return elem;
     });
 
-    console.log(passedTests, "test aprobados");
+    console.log(results, "test aprobados");
 
     return res.json({
       page: page || 1,

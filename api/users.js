@@ -88,6 +88,17 @@ router.post("/login", (req, res, next) => {
           });
       }
 
+      if (user.role === "ROLE_TEACHER") {
+        await knex("teachers")
+          .select()
+          .where("teachers.id", user.id)
+          .first()
+          .then((result) => {
+            user.permission = result.permission;
+            user.centerID = result.idCenter;
+          });
+      }
+
       loadedUser = user;
       var hash = user.password;
       hash = hash.replace(/^\$2y(.+)$/i, "$2a$1");
