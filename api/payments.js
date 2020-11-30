@@ -8,13 +8,14 @@ const {
 } = require("express-validator");
 const knex = require("../db/knex"); //the connection
 const moment = require("moment");
-const Redsys = require("../lib/redsys-api/api-redsys").Redsys;
+const RedSys = require("redsys-pos");
+const { CURRENCIES, TRANSACTION_TYPES } = RedSys;
 
 const router = express.Router();
 
-//SAN MIGUEL
-REDSYS_MERCHANT_CODE_2 = 337131965;
-REDSYS_MERCHANT_CODE_SHA256_2 = "qwYpJ9faZX7HjaFt70kF3qHl/z+laldV";
+// //SAN MIGUEL
+// REDSYS_MERCHANT_CODE_2 = 337131965;
+// REDSYS_MERCHANT_CODE_SHA256_2 = "qwYpJ9faZX7HjaFt70kF3qHl/z+laldV";
 // ACTUR
 REDSYS_MERCHANT_CODE_3 = 350030235;
 REDSYS_MERCHANT_CODE_SHA256_3 = "+GzPjLrcqJzaZwmeZeisbcG8qmUtH/Jh";
@@ -76,34 +77,67 @@ REDSYS_MERCHANT_CODE_SHA256_8 = "qwYpJ9faZX7HjaFt70kF3qHl/z+laldV";
 
 //Snippet to obtain the signature & merchantParameters
 function createPayment(description, total, titular, orderId, paymentId) {
-  const classId = 12;
+  const classId = 1;
   const studentId = 1;
   const centerId = 2;
   const amount = 20;
-  const claveSHA256 = REDSYS_MERCHANT_CODE_SHA256_2;
+  //SAN MIGUEL
+  REDSYS_MERCHANT_CODE_2 = 337131965;
+  REDSYS_MERCHANT_CODE_SHA256_2 = "qwYpJ9faZX7HjaFt70kF3qHl/z+laldV";
 
-  const domain = `https://gestion.autius/api/getRedsysClassResponse?classId=${classId}&studentId=${studentId}&centerId=${centerId}&amount=${amount}`;
+  const domain = `https://localhost?classId=${classId}&studentId=${studentId}&centerId=${centerId}&amount=${amount}`;
 
-  const redsys = new Redsys();
-  const mParams = {
-    DS_MERCHANT_AMOUNT: '145',
-    DS_MERCHANT_ORDER: +new Date(),
-    DS_MERCHANT_MERCHANTCODE: 999008881,
-    DS_MERCHANT_CURRENCY: 978,
-    DS_MERCHANT_TRANSACTIONTYPE: 0,
-    DS_MERCHANT_TERMINAL: 001,
-    DS_MERCHANT_MERCHANTURL: "",
-    DS_MERCHANT_URLOK: domain,
-    DS_MERCHANT_URLKO: domain,
+  const MERCHANT_KEY = "sq7HjrUOBfKmC576ILgskD5srU870gJ7"; // TESTING KEY
+  const redsys = new RedSys(REDSYS_MERCHANT_CODE_SHA256_2);
+
+  const order = +new Date();
+  const orderString = order.toString();
+
+  var obj = {
+    amount: "100", // cents (in euro)
+    orderReference: orderString,
+    merchantName: "Autius",
+    merchantCode: REDSYS_MERCHANT_CODE_2,
+    currency: CURRENCIES.EUR,
+    transactionType: TRANSACTION_TYPES.AUTHORIZATION, // '0'
+    terminal: "1",
+    merchantURL: "",
+    successURL: domain,
+    errorURL: domain,
   };
-  console.log(mParams.DS_MERCHANT_ORDER);
-  // return res.json({ result: form_encoded_params });
-  return {
-    signature: redsys.createMerchantSignature(claveSHA256, mParams),
-    merchantParameters: redsys.createMerchantParameters(mParams),
-    raw: mParams,
-  };
+
+  const result = redsys.makePaymentParameters(obj);
+  return result;
 }
+// function createPayment(description, total, titular, orderId, paymentId) {
+//   const classId = 12;
+//   const studentId = 1;
+//   const centerId = 2;
+//   const amount = 20;
+//   const claveSHA256 = REDSYS_MERCHANT_CODE_SHA256_2;
+
+//   const domain = `https://gestion.autius/api/getRedsysClassResponse?classId=${classId}&studentId=${studentId}&centerId=${centerId}&amount=${amount}`;
+
+//   const redsys = new Redsys();
+//   const mParams = {
+//     DS_MERCHANT_AMOUNT: '145',
+//     DS_MERCHANT_ORDER: +new Date(),
+//     DS_MERCHANT_MERCHANTCODE: 999008881,
+//     DS_MERCHANT_CURRENCY: 978,
+//     DS_MERCHANT_TRANSACTIONTYPE: 0,
+//     DS_MERCHANT_TERMINAL: 001,
+//     DS_MERCHANT_MERCHANTURL: "",
+//     DS_MERCHANT_URLOK: domain,
+//     DS_MERCHANT_URLKO: domain,
+//   };
+//   console.log(mParams.DS_MERCHANT_ORDER);
+//   // return res.json({ result: form_encoded_params });
+//   return {
+//     signature: redsys.createMerchantSignature(claveSHA256, mParams),
+//     merchantParameters: redsys.createMerchantParameters(mParams),
+//     raw: mParams,
+//   };
+// }
 
 // //Snippet to process the TPV callback
 // const merchantParams =

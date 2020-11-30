@@ -25,7 +25,8 @@
     "node-redsys-api": "0.0.5",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
-    "redsys-polite": "^1.4.3"
+    "redsys-polite": "^1.4.3",
+    "redsys-pos": "^1.0.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.2"
