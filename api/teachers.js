@@ -251,7 +251,7 @@ router.get(
 
 // GET ONE
 router.get(
-  "/:teacherID",
+  "/get-one/:teacherID",
   [param("teacherID").isInt().toInt()],
   async (req, res) => {
     try {
