@@ -13,10 +13,7 @@ const router = express.Router();
 
 router.get(
   "/",
-  [
-    query("teacherID").optional(),
-    query("centerID").optional(),
-  ],
+  [query("teacherID").optional(), query("centerID").optional()],
   // defaultGetValidators,
   async (req, res) => {
     const errors = validationResult(req);
@@ -51,6 +48,8 @@ router.get(
       start: "gc.startHour",
       duration: "class_types.duration",
       idCenter: "teachers.idCenter",
+      teacherName: "teachers.firstName",
+      teacherLastName: "teachers.lastName1",
     });
 
     return res.json({
@@ -70,6 +69,44 @@ router.get(
         return elem;
       }),
     });
+  }
+);
+
+// GET ONE PRACTICAL CLASS
+
+router.get(
+  "/:classID",
+  [param("classID").isInt().toInt()],
+  async (req, res) => {
+    try {
+      const { classID } = matchedData(req);
+
+      return knex("practical_classes")
+        .leftJoin(
+          "generated_classes",
+          "generated_classes.id",
+          "practical_classes.idGeneratedClass"
+        )
+        .leftJoin("students", "students.id", "generated_classes.idStudent")
+        .leftJoin("courses", "courses.idStudent", "students.id")
+        .select(
+          "students.id as studentID",
+          "students.firstName",
+          "students.lastName1",
+          "students.lastName2",
+          "students.phone",
+          "courses.permission",
+          "practical_classes.*"
+        )
+        .where("practical_classes.idGeneratedClass", classID)
+        .first()
+        .then((result) => {
+          res.json({ result: result });
+        });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send("Error");
+    }
   }
 );
 
@@ -205,9 +242,6 @@ router.post(
       endHour = null,
     } = data;
 
-    console.log(startDate, "startDate");
-    console.log(data, "data me viene");
-
     // Calculo el maximo precio de una clase para el centro
     const centerMaxPrice = await knex("centers")
       .select("centers.maxPrice")
@@ -271,6 +305,45 @@ router.post(
     } else {
       return "No hay clases nuevas";
     }
+  }
+);
+
+// EDIT CLASS
+router.post(
+  "/edit-practical-class/:classID",
+  [
+    param("classID").isInt().toInt(),
+    body("startTime"),
+    body("kmStart"),
+    body("kmEnd"),
+    body("startTime"),
+    body("endTime"),
+    body("observation"),
+    body("studentSignature"),
+    body("evaluation"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+    const data = matchedData(req, { includeOptionals: true });
+
+    knex("practical_classes")
+      .update({
+        kmStart: data.kmStart,
+        kmEnd: data.kmEnd,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        observation: data.observation,
+        studentSignature: data.studentSignature,
+        evaluation: data.evaluation,
+        updated_at: new Date(),
+      })
+      .where("practical_classes.idGeneratedClass", data.classID)
+      .then((result) => {
+        res.json({ result });
+      });
   }
 );
 
