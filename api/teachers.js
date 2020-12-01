@@ -256,7 +256,7 @@ router.get(
   async (req, res) => {
     try {
       const { teacherID } = matchedData(req);
-      var teacherQuery = knex("teachers")
+      var teacherQuery = await knex("teachers")
         .leftJoin("centers", "centers.id", "teachers.idCenter")
         .select(
           "teachers.id",
@@ -272,43 +272,43 @@ router.get(
           "teachers.created_at",
           "teachers.updated_at",
           "teachers.idCenter as centerID",
-          "centers.name as centerName"
+          "centers.name as centerName",
+          "rol.role",
+          "rol.idUser as userID",
+          "users.user as user"
         )
         .where("teachers.id", teacherID)
         .first()
         // SELECCIONAR ROL?
-        .leftJoin("user_rols as rol", "centers.id", "rol.idEntity")
+        .leftJoin("user_rols as rol", "rol.idEntity", "teachers.id")
         .where("rol.role", "ROLE_TEACHER")
-        .where("teachers.id", teacherID)
-        .first();
-
-      const rolQuery = knex("user_rols")
-        .leftJoin("users", "users.id", "user_rols.idUser")
-        .select("role", "idUser")
-        .where("user_rols.role", "ROLE_TEACHER")
-        .where("idEntity", teacherID)
-        .first();
-
-      return Promise.all([teacherQuery, rolQuery])
-        .then(async ([teacher, rol]) => {
-          if (!teacher) {
-            return res.status(401).send(teacher, rol, "Not found");
-          }
-          const userQuery = await knex("users")
-            .select("users.user")
-            .where("id", rol.idUser)
-            .first()
-            .then((response) => response);
-
-          console.log(userQuery.user, "query user id");
-          teacher["rol"] = rol;
-          teacher["user"] = userQuery.user;
-          return res.json(teacher);
-        })
-        .catch((error) => {
-          console.log(error);
-          return res.status(500).send("Error");
+        .leftJoin("users", "users.id", "rol.idUser")
+        .then((result) => {
+          return result;
         });
+
+      return res.json({ result: teacherQuery });
+
+      // return Promise.all([teacherQuery, rolQuery])
+      //   .then(async ([teacher, rol]) => {
+      //     if (!teacher) {
+      //       return res.status(401).send(teacher, rol, "Not found");
+      //     }
+      //     const userQuery = await knex("users")
+      //       .select("users.user")
+      //       .where("id", rol.idUser)
+      //       .first()
+      //       .then((response) => response);
+
+      //     console.log(userQuery.user, "query user id");
+      //     teacher["rol"] = rol;
+      //     teacher["user"] = userQuery.user;
+      //     return res.json(teacher);
+      //   })
+      //   .catch((error) => {
+      //     console.log(error);
+      //     return res.status(500).send("Error");
+      //   });
     } catch (error) {
       console.log(error);
       return res.status(500).send("Error");
