@@ -291,7 +291,7 @@ router.post(
 // CREAR EXAM
 router.post(
   "/",
-  [body("date"), body("type"), body("centerID")],
+  [body("date").toDate(), body("type"), body("centerID")],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -320,7 +320,7 @@ router.post(
 // EDIT EXAM
 router.post(
   "/edit-exam/:examID",
-  [param("examID").isInt().toInt(), body("registerNumber"), body("date")],
+  [param("examID").isInt().toInt(), body("registerNumber"), body("date").toDate()],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
