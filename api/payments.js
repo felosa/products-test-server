@@ -9,6 +9,7 @@ const {
 const knex = require("../db/knex"); //the connection
 const moment = require("moment");
 const RedSys = require("redsys-pos");
+const { getResponseCodeMessage } = require("redsys-pos");
 const { CURRENCIES, TRANSACTION_TYPES } = RedSys;
 
 const router = express.Router();
@@ -35,46 +36,6 @@ REDSYS_MERCHANT_CODE_SHA256_7 = "Sa3oOhGhAYt4oxlNYDi1hs2CuS1c1+ME";
 REDSYS_MERCHANT_CODE_8 = 337131965;
 REDSYS_MERCHANT_CODE_SHA256_8 = "qwYpJ9faZX7HjaFt70kF3qHl/z+laldV";
 
-// const createPayment = (res) => {
-//   // const commerce_code = "<your_commerce_code>";
-//   // const secret_code = "<your_secret_key>";
-//   const packId = 1;
-//   const studentId = 1;
-//   const centerId = 2;
-//   const amount = 2000;
-//   // const claveSHA256 = REDSYS_MERCHANT_CODE_SHA256_8;
-//   const domain = `https://gestion.autius.com/api/getRedsysPacksResponse?packId=${packId}&studentId=${studentId}&centerId=${centerId}`;
-
-//   const commerce_code = process.env.COMMERCE_CODE || "000000000";
-//   const secret_code =
-//     process.env.COMMERCE_SECRET || "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-
-//   const redsys = new RedsysBuilder()
-//     .setMerchantCode(REDSYS_MERCHANT_CODE_2)
-//     .setName("")
-//     .setTitular("")
-//     .setSecret(REDSYS_MERCHANT_CODE_SHA256_2)
-//     .enablePayByReference()
-//     .enableDebug()
-//     .build();
-
-//   console.log(redsys, "redsys");
-
-//   const payment = new PaymentBuilder()
-//     .setTotal(amount)
-//     .setOrderId(+Date.now())
-//     .setUrlMerchant('')
-//     .setUrlCancel(domain)
-//     .setUrlOK(domain)
-//     .build();
-
-//   console.log(payment, "pago");
-
-//   const form_encoded_params = redsys.getFormData(payment);
-
-//   return res.json({ result: form_encoded_params });
-// };
-
 //Snippet to obtain the signature & merchantParameters
 function createPayment(description, total, titular, orderId, paymentId) {
   const classId = 1;
@@ -96,7 +57,7 @@ function createPayment(description, total, titular, orderId, paymentId) {
 
   var obj = {
     amount: "100", // cents (in euro)
-    orderReference: '1606718241', // 10 cifras
+    orderReference: "1606718241", // 10 cifras
     merchantName: "Autius",
     merchantCode: "327234688",
     currency: CURRENCIES.EUR,
@@ -110,63 +71,21 @@ function createPayment(description, total, titular, orderId, paymentId) {
   const result = redsys.makePaymentParameters(obj);
   return result;
 }
-// function createPayment(description, total, titular, orderId, paymentId) {
-//   const classId = 12;
-//   const studentId = 1;
-//   const centerId = 2;
-//   const amount = 20;
-//   const claveSHA256 = REDSYS_MERCHANT_CODE_SHA256_2;
 
-//   const domain = `https://gestion.autius/api/getRedsysClassResponse?classId=${classId}&studentId=${studentId}&centerId=${centerId}&amount=${amount}`;
+function decodeResponse(merchantParams, signature) {
+  const MERCHANT_KEY = "sq7HjrUOBfKmC576ILgskD5srU870gJ7"; // TESTING KEY
+  const redsys = new RedSys(MERCHANT_KEY);
+  //   const merchantParams = "eyJEc19EYXRlIjoiMjAlMkYxMCUyRjIwMTciLCJEc19Ib3VyIjoiMTclM0EyMyIsIkRzX1NlY3VyZVBheW1lbnQiOiIwIiwiRHNfQW1vdW50IjoiMTAwIiwiRHNfQ3VycmVuY3kiOiI5NzgiLCJEc19PcmRlciI6IjAwMDA5NjU1RDg0IiwiRHNfTWVyY2hhbnRDb2RlIjoiMzI3MjM0Njg4IiwiRHNfVGVybWluYWwiOiIwMDEiLCJEc19SZXNwb25zZSI6Ijk5MTUiLCJEc19UcmFuc2FjdGlvblR5cGUiOiIwIiwiRHNfTWVyY2hhbnREYXRhIjoiIiwiRHNfQXV0aG9yaXNhdGlvbkNvZGUiOiIrKysrKysiLCJEc19Db25zdW1lckxhbmd1YWdlIjoiMSJ9";
+  // const signature = "vrUsaNbxfonyn4ONUos6oosUaTBY0_SGoKDel6qsHqk";
+  // var str = getResponseCodeMessage("0180");
+  // console.log(str, "respesta p[ositiva");
+  const result = redsys.checkResponseParameters(merchantParams, signature);
+  return result;
+}
 
-//   const redsys = new Redsys();
-//   const mParams = {
-//     DS_MERCHANT_AMOUNT: '145',
-//     DS_MERCHANT_ORDER: +new Date(),
-//     DS_MERCHANT_MERCHANTCODE: 999008881,
-//     DS_MERCHANT_CURRENCY: 978,
-//     DS_MERCHANT_TRANSACTIONTYPE: 0,
-//     DS_MERCHANT_TERMINAL: 001,
-//     DS_MERCHANT_MERCHANTURL: "",
-//     DS_MERCHANT_URLOK: domain,
-//     DS_MERCHANT_URLKO: domain,
-//   };
-//   console.log(mParams.DS_MERCHANT_ORDER);
-//   // return res.json({ result: form_encoded_params });
-//   return {
-//     signature: redsys.createMerchantSignature(claveSHA256, mParams),
-//     merchantParameters: redsys.createMerchantParameters(mParams),
-//     raw: mParams,
-//   };
-// }
-
-// //Snippet to process the TPV callback
-// const merchantParams =
-//   tpvResponse.Ds_MerchantParameters || tpvResponse.DS_MERCHANTPARAMETERS;
-// const signature = tpvResponse.Ds_Signature || tpvResponse.DS_SIGNATURE;
-
-// const merchantParamsDecoded = redsys.decodeMerchantParameters(merchantParams);
-// const merchantSignatureNotif = redsys.createMerchantSignatureNotif(
-//   tpvInfo.secret,
-//   merchantParams
-// );
-// const dsResponse = parseInt(
-//   merchantParamsDecoded.Ds_Response || merchantParamsDecoded.DS_RESPONSE
-// );
-
-// if (
-//   redsys.merchantSignatureIsValid(signature, merchantSignatureNotif) &&
-//   dsResponse > -1 &&
-//   dsResponse < 100
-// ) {
-//   console.log("TPV payment is OK");
-// } else {
-//   console.log("TPV payment KO");
-// }
-
-// GET ALL ARQUEOS
+// GET SIGNATURE
 router.get(
-  "/",
+  "/signature",
   [
     query("view").optional(),
     query("centerID").optional(),
@@ -201,87 +120,38 @@ router.get(
   }
 );
 
-// CREAR ARQUEO HACER DE 0
-router.post("/", [body("centerID").toInt()], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() });
-  }
-
-  const data = matchedData(req, { includeOptionals: true });
-
-  console.log(data, "centro llega");
-
-  // necesito el ultimo arqueo para saber apartir de que fecha y total hay que hacer el siguiente
-  const lastArching = await knex("archings")
-    .select("archings.date as lastArchingDate", "archings.total")
-    .where("archings.idCenter", data.centerID)
-    .orderBy("archings.date", "desc")
-    .first();
-
-  // si no hay ningun arching previo, cojo la fecha de creacion del centro y total es 0
-  const centerInfo = await knex("centers")
-    .select("centers.created_at")
-    .where("centers.id", data.centerID)
-    .first();
-
-  console.log(centerInfo, "centerInfo");
-
-  const lastArchingDate = lastArching
-    ? lastArching.lastArchingDate
-    : centerInfo.created_at;
-
-  const lastArchingTotal = lastArching ? lastArching.total : 0;
-
-  const payments = await knex("payments")
-    .leftJoin("students", "payments.idStudent", "students.id")
-    .select("payments.paymentType", "payments.quantity")
-    .where("students.idCenter", data.centerID)
-    .andWhere("payments.type", "Pago")
-    .andWhere("payments.date", ">", lastArchingDate);
-
-  const closures = await knex("closures")
-    .select("closures.quantity")
-    .where("closures.date", ">", lastArchingDate);
-
-  const withdrawals = closures.reduce((total, elem) => {
-    return elem.quantity + total;
-  }, 0);
-
-  const paymentsSum = payments.reduce(
-    (finalObject, elem) => {
-      const newValue = elem.quantity + finalObject[elem.paymentType];
-      finalObject[elem.paymentType] = newValue;
-      return finalObject;
-    },
-    {
-      "TPV Manual": 0,
-      "TPV Online": 0,
-      Transferencia: 0,
-      Efectivo: 0,
-      "SUPERVISOR (Si es pack recuerda además reducir nº clases bolsa)": 0,
+// PROCESS RETURN
+router.post(
+  "/",
+  [
+    body("Ds_SignatureVersion"),
+    body("Ds_MerchantParameters"),
+    body("Ds_Signature"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
     }
-  );
-  console.log(lastArchingTotal, paymentsSum["Efectivo"], withdrawals, "dinero");
-  knex("archings")
-    .insert({
-      date: new Date(),
-      tpv: paymentsSum["TPV Manual"],
-      cash: paymentsSum["Efectivo"],
-      wireTransfer: paymentsSum["Transferencia"],
-      online: paymentsSum["TPV Online"],
-      withdrawals: withdrawals,
-      total: lastArchingTotal + paymentsSum["Efectivo"] - withdrawals,
-      idCenter: data.centerID,
-      created_at: new Date(),
-      updated_at: new Date(),
-    })
-    .then(([newID]) => {
-      return res.json({ newID });
-    })
-    .catch((err) => {
-      return res.status(500).send(err);
-    });
-});
+
+    console.log("hola llego aqui");
+    const data = matchedData(req, { includeOptionals: true });
+
+    const { Ds_SignatureVersion, Ds_MerchantParameters, Ds_Signature } = data;
+
+    console.log(Ds_SignatureVersion, "signature version");
+    console.log(Ds_MerchantParameters, "parameters");
+    console.log(Ds_Signature, "signature");
+
+    const infoDecoded = await decodeResponse(
+      Ds_MerchantParameters,
+      Ds_Signature
+    );
+
+    console.log(infoDecoded, "me viene la info");
+
+    return "bien";
+  }
+);
 
 module.exports = router;
