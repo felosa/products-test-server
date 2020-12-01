@@ -278,12 +278,14 @@ router.get(
         .first()
         // SELECCIONAR ROL?
         .leftJoin("user_rols as rol", "centers.id", "rol.idEntity")
+        .where("rol.role", "ROLE_TEACHER")
         .where("teachers.id", teacherID)
         .first();
 
       const rolQuery = knex("user_rols")
         .leftJoin("users", "users.id", "user_rols.idUser")
         .select("role", "idUser")
+        .where("user_rols.role", "ROLE_TEACHER")
         .where("idEntity", teacherID)
         .first();
 
