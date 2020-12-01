@@ -292,7 +292,7 @@ router.get(
       return Promise.all([teacherQuery, rolQuery])
         .then(async ([teacher, rol]) => {
           if (!teacher) {
-            return res.status(401).send("Not found");
+            return res.status(401).send(teacher, rol, "Not found");
           }
           const userQuery = await knex("users")
             .select("users.user")
