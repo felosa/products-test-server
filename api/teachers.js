@@ -269,20 +269,18 @@ router.get(
           "teachers.email",
           "teachers.birthday",
           "teachers.teacherSignature",
-          "teachers.created_at",
-          "teachers.updated_at",
-          "teachers.idCenter as centerID",
-          "centers.name as centerName",
-          "rol.role",
-          "rol.idUser as userID",
-          "users.user as user"
+          "teachers.idCenter as centerID"
+          // "centers.name as centerName",
+          // "rol.role",
+          // "rol.idUser as userID",
+          // "users.user as user"
         )
         .where("teachers.id", teacherID)
         .first()
         // SELECCIONAR ROL?
-        .leftJoin("user_rols as rol", "rol.idEntity", "teachers.id")
-        .where("rol.role", "ROLE_TEACHER")
-        .leftJoin("users", "users.id", "rol.idUser")
+        // .leftJoin("user_rols as rol", "rol.idEntity", "teachers.id")
+        // .where("rol.role", "ROLE_TEACHER")
+        // .leftJoin("users", "users.id", "rol.idUser")
         .then((result) => {
           return result;
         });
