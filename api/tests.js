@@ -121,25 +121,25 @@ router.get(
 
     var results = await getQuery
       .select(
-        // knex.raw(
-        //   "ROW_NUMBER() OVER(ORDER BY student_tests.created_at) AS num_row"
-        // ),
-        // // "student_tests.idStudent",
-        // "student_tests.idTest as id",
-        // "student_tests.date",
-        // "student_tests.created_at",
-        // "student_tests.testResult"
+        knex.raw(
+          "ROW_NUMBER() OVER(ORDER BY student_tests.created_at) AS num_row"
+        ),
+        // "student_tests.idStudent",
+        "student_tests.idTest as id",
+        "student_tests.date",
+        "student_tests.created_at",
+        "student_tests.testResult"
       )
-      // .leftJoin("tests", "tests.idTest", "student_tests.idTest")
-      // .where("tests.result", 1)
-      // .count("tests.result as result")
-      // .groupBy([
-      //   "student_tests.idTest",
-      //   "tests.result",
-      //   "student_tests.date",
-      //   "student_tests.created_at",
-      //   "student_tests.testResult",
-      // ])
+      .leftJoin("tests", "tests.idTest", "student_tests.idTest")
+      .where("tests.result", 1)
+      .count("tests.result as result")
+      .groupBy([
+        "student_tests.idTest",
+        "tests.result",
+        "student_tests.date",
+        "student_tests.created_at",
+        "student_tests.testResult",
+      ])
       .orderBy("student_tests.created_at", "desc")
       .limit(perPage)
       .offset((page - 1) * perPage);
