@@ -257,7 +257,6 @@ router.get(
     try {
       const { teacherID } = matchedData(req);
       var teacherQuery = await knex("teachers")
-        .leftJoin("centers", "centers.id", "teachers.idCenter")
         .select(
           "teachers.id",
           "teachers.firstName",
@@ -269,18 +268,18 @@ router.get(
           "teachers.email",
           "teachers.birthday",
           "teachers.teacherSignature",
-          "teachers.idCenter as centerID"
-          // "centers.name as centerName",
+          "teachers.idCenter as centerID",
           // "rol.role",
-          // "rol.idUser as userID",
-          // "users.user as user"
+          "rol.idUser as userID",
+          "users.user as user"
         )
         .where("teachers.id", teacherID)
         .first()
         // SELECCIONAR ROL?
-        // .leftJoin("user_rols as rol", "rol.idEntity", "teachers.id")
-        // .where("rol.role", "ROLE_TEACHER")
-        // .leftJoin("users", "users.id", "rol.idUser")
+        .leftJoin("user_rols as rol", "rol.idEntity", "teachers.id")
+        .where("rol.role", "ROLE_TEACHER")
+        .first()
+        .leftJoin("users", "users.id", "rol.idUser")
         .then((result) => {
           return result;
         });
