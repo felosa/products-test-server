@@ -506,7 +506,7 @@ router.post(
         .update({
           // pasar para el user a coger la inicial del nombre y el priemr apellido
           user: data.user,
-          password: data.password ? newPassword : "",
+          password: newPassword,
           updated_at: new Date(),
         })
         .where("id", data.rol.idUser)

@@ -1009,6 +1009,7 @@ router.post(
     const userID = await knex("user_rols")
       .select("user_rols.idUser")
       .where("user_rols.idEntity", studentID)
+      .andWhere("user_rols.role", "ROLE_STUDENT")
       .first()
       .then(({ idUser }) => {
         console.log(idUser, "id del nuevo user-rol");

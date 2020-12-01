@@ -316,12 +316,6 @@ router.get(
   // defaultGetValidators,
   (req, res) => {
     const query = knex("centers")
-      // HAY QUE SUMAR EL NUMERO DE ALUMNOS EN CADA CENTRO. ACTIVOS E INACTIVOS
-      //   .leftJoin(
-      //     "students",
-      //     "student.id",
-      //     "students.idCenter"
-      //   )
       .select(
         "centers.id",
         "centers.adress",
@@ -343,22 +337,12 @@ router.get(
         // "centers.numberStudents"
       )
       .then((results) => {
+        
         return res.json({
           results,
         });
       })
       .catch((error) => res.status(500).send(JSON.stringify(error)));
-
-    // return Promise.all([query, countQuery])
-    //   .then(([results, count]) => {
-    //     return res.json({
-    //       page: criteria.page || 1,
-    //       perPage: criteria.perPage || 10,
-    //       totalResults: count.totalResults,
-    //       results,
-    //     });
-    //   })
-    //   .catch((error) => res.status(500).send(JSON.stringify(error)));
   }
 );
 
