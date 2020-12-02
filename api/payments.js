@@ -64,8 +64,8 @@ function createPayment(description, total, titular, orderId, paymentId) {
     transactionType: TRANSACTION_TYPES.AUTHORIZATION, // '0'
     terminal: "1",
     merchantURL: "http://gestion.autius.com/",
-    successURL: "http://localhost:3000",
-    errorURL: "http://localhost:3000",
+    successURL: "http://beta2020.autius.com?state=succes",
+    errorURL: "http://beta2020.autius.com?state=error",
   };
 
   const result = redsys.makePaymentParameters(obj);
