@@ -290,6 +290,7 @@ router.get(
       .offset((page - 1) * perPage)
       .select()
       .leftJoin("teachers", "teachers.id", "generated_classes.idTeacher")
+      .leftJoin("exit_points", "exit_points.id", "teachers.idExitPoint")
       .leftJoin(
         "practical_classes",
         "practical_classes.idGeneratedClass",
