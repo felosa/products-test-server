@@ -34,6 +34,7 @@ const tests = require("./api/tests");
 const classes = require("./api/classes");
 const exportPdf = require("./api/export-pdf");
 const payments = require("./api/payments");
+const exitPoints = require("./api/exitPoints");
 
 app.use(logger("dev"));
 app.use(express.json());
@@ -57,6 +58,7 @@ app.use("/api/tests", tests);
 app.use("/api/classes", classes);
 app.use("/api/export-pdf", exportPdf);
 app.use("/api/payments", payments);
+app.use("/api/exit-points", exitPoints);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

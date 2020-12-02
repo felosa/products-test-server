@@ -533,7 +533,7 @@ router.get(
           "students.id as studentID",
           "students.registerNumber",
           "students.dni",
-          "students.password",
+          // "students.password",
           "students.dniExpiration",
           "students.firstName",
           "students.lastName1",

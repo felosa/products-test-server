@@ -237,6 +237,7 @@ router.get(
         "teachers.created_at",
         "teachers.updated_at",
         "teachers.idCenter as centerID",
+        "teachers.idExitPoint",
         "centers.name as centerName"
       );
 
@@ -264,11 +265,12 @@ router.get(
           "teachers.lastName2",
           "teachers.dni",
           "teachers.phone",
-          "teachers.password",
+          // "teachers.password",
           "teachers.email",
           "teachers.birthday",
           "teachers.teacherSignature",
           "teachers.idCenter as centerID",
+          "teachers.idExitPoint",
           // "rol.role",
           "rol.idUser as userID",
           "users.user as user"
@@ -318,6 +320,7 @@ router.post(
   "/",
   [
     body("idCenter"),
+    body("idExitPoint"),
     body("firstName"),
     body("lastName1"),
     body("lastName2"),
@@ -371,6 +374,7 @@ router.post(
           password: data.dni,
           teacherSignature: data.teacherSignature,
           idCenter: data.idCenter,
+          idExitPoint: data.idExitPoint,
           created_at: new Date(),
           updated_at: new Date(),
         })
@@ -434,6 +438,7 @@ router.post(
     body("password"),
     body("phone"),
     body("email"),
+    body("idExitPoint"),
     body("user"),
     body("birthday").toDate(),
     body("teacherSignature"),
@@ -484,6 +489,7 @@ router.post(
           password: data.password,
           teacherSignature: data.teacherSignature,
           idCenter: data.centerID,
+          idExitPoint: data.idExitPoint,
           updated_at: new Date(),
         })
         .where("id", data.ID)
