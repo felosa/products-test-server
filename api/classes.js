@@ -42,7 +42,7 @@ router.get(
       getQuery.where("teachers.id", "=", teacherID);
     }
 
-    if ("Todos" !== exitPointID) {
+    if ("Todos" !== exitPointID && null != exitPointID) {
       getQuery.where("teachers.idExitPoint", "=", exitPointID);
     }
 
