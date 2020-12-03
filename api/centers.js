@@ -259,7 +259,8 @@ router.get(
   async (req, res) => {
     try {
       const { centerID } = matchedData(req);
-      var centerQuery = knex("centers")
+
+      const centerQuery = await knex("centers")
         .select(
           "centers.id",
           "centers.adress",
@@ -275,35 +276,46 @@ router.get(
           "centers.postalCode",
           "centers.provinceNumber",
           "centers.sectionNumber",
-          "centers.created_at",
-          "centers.updated_at"
+          "rol.role",
+          "users.user"
         )
-
         .where("centers.id", centerID)
         .first()
         // SELECCIONAR ROL?
         .leftJoin("user_rols as rol", "centers.id", "rol.idEntity")
         .where("centers.id", centerID)
-        .first();
-
-      const rolQuery = knex("user_rols")
-        .leftJoin("users", "users.id", "user_rols.idUser")
-        .select("role", "idUser")
+        .andWhere("rol.role", "ROLE_CENTER")
+        .leftJoin("users", "users.id", "rol.idEntity")
         .where("idEntity", centerID)
-        .first();
-
-      return Promise.all([centerQuery, rolQuery])
-        .then(([center, rol]) => {
-          if (!center) {
-            return res.status(401).send("Not found");
-          }
-          center["rol"] = rol;
-          return res.json(center);
-        })
-        .catch((error) => {
-          console.log(error);
-          return res.status(500).send("Error");
+        .then((result) => {
+          return result;
         });
+
+      console.log(centerQuery, "query del centro");
+
+      const studentsActive = await knex("students")
+        .where("students.idCenter", centerQuery.id)
+        .andWhere("students.active", 1)
+        .andWhere("students.isOther", 0)
+        .count("* as actives")
+        .then(([{ actives }]) => {
+          return actives;
+        });
+
+      const otherActive = await knex("students")
+        .where("students.idCenter", centerQuery.id)
+        .andWhere("students.active", 1)
+        .andWhere("students.isOther", 1)
+        .count("* as otherActives")
+        .then(([{ otherActives }]) => {
+          return otherActives;
+        });
+
+      return res.json({
+        results: centerQuery,
+        actives: studentsActive,
+        otherActives: otherActive,
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).send("Error");
@@ -337,7 +349,6 @@ router.get(
         // "centers.numberStudents"
       )
       .then((results) => {
-        
         return res.json({
           results,
         });
