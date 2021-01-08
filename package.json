@@ -15,6 +15,7 @@
     "dotenv": "^8.2.0",
     "express": "~4.16.1",
     "express-validator": "^6.5.0",
+    "faker": "^5.1.0",
     "html-pdf": "^2.2.0",
     "http-errors": "~1.6.3",
     "jsonwebtoken": "^8.5.1",

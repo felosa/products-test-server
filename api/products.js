@@ -23,7 +23,7 @@ router.get(
 
     return knex
       .table("products")
-      .orderBy("products.created_at", "desc")
+      .orderBy("products.createdAt", "desc")
       .then(result => { return res.json(result) });
 
   }
@@ -37,16 +37,16 @@ router.get(
     try {
       const { productID } = matchedData(req);
       var productQuery = knex("products")
-        .leftJoin("centers", "centers.id", "vehicles.idCenter")
         .select(
-          "vehicles.id",
-          "vehicles.enrollment",
-          "vehicles.description",
-          "vehicles.itvDueDate",
-          "vehicles.insuranceDueDate",
-          "vehicles.nextPreventiveMaintenance",
-          "vehicles.idCenter",
-          "centers.name as centerName"
+          "products.id",
+          "products.name",
+          "products.type",
+          "products.price",
+          "products.expiryDate",
+          "products.description",
+          "products.country",
+          "products.createdAt",
+          "products.updatedAt",
         )
         .where("products.id", productID)
         .first()
@@ -68,12 +68,12 @@ router.get(
 router.post(
   "/",
   [
-    body("enrollment"),
+    body("name"),
+    body("type"),
+    body("price"),
+    body("expiryDate").toDate(),
     body("description"),
-    body("itvDueDate").toDate(),
-    body("insuranceDueDate").toDate(),
-    body("nextPreventiveMaintenance").toDate(),
-    body("idCenter"),
+    body("country"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -82,17 +82,17 @@ router.post(
     }
 
     const data = matchedData(req, { includeOptionals: true });
-
+    console.log(req.body, "body")
     knex("products")
       .insert({
-        enrollment: data.enrollment,
+        name: data.name,
+        type: data.type,
+        price: data.price,
+        expiryDate: data.expiryDate,
         description: data.description,
-        itvDueDate: data.itvDueDate,
-        insuranceDueDate: data.insuranceDueDate,
-        nextPreventiveMaintenance: data.nextPreventiveMaintenance,
-        idCenter: data.idCenter,
-        created_at: new Date(),
-        updated_at: new Date(),
+        country: data.country,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
       .then(([newID]) => {
         return res.json({ newID });
@@ -107,13 +107,13 @@ router.post(
 router.post(
   "/:ID",
   [
-    param("ID").isInt().toInt(),
-    body("enrollment"),
-    body("description"),
-    body("itvDueDate").toDate(),
-    body("insuranceDueDate").toDate(),
-    body("nextPreventiveMaintenance").toDate(),
-    body("idCenter"),
+  param("ID"),
+  body("name"),
+  body("type"),
+  body("price"),
+  body("expiryDate").toDate(),
+  body("description"),
+  body("country"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -125,13 +125,13 @@ router.post(
 
     knex("products")
       .update({
-        enrollment: data.enrollment,
+        name: data.name,
+        type: data.type,
+        price: data.price,
+        expiryDate: data.expiryDate,
         description: data.description,
-        itvDueDate: data.itvDueDate,
-        insuranceDueDate: data.insuranceDueDate,
-        nextPreventiveMaintenance: data.nextPreventiveMaintenance,
-        idCenter: data.idCenter,
-        updated_at: new Date(),
+        country: data.country,
+        updatedAt: new Date(),
       })
       .where("id", data.ID)
       .then((result) => {
