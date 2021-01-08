@@ -7,7 +7,6 @@ const createFakerProduct = () => ({
   expiryDate: faker.date.future(),
   description: faker.lorem.paragraph(),
   country: faker.address.country()
-
 })
 
 exports.seed = async function (knex, Promise) {
@@ -21,4 +20,5 @@ exports.seed = async function (knex, Promise) {
   await knex("products")
     .del()
     .insert(fakeProducts)
+
 };
