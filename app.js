@@ -6,9 +6,6 @@ const cors = require("cors");
 
 const whitelist = [
   "http://localhost:3000",
-  "https://beta2020.autius.com",
-  "https://gestion.autius.com",
-  "https://reservas.autius.com",
 ];
 const corsOptions = {
   origin: function (origin, callback) {
@@ -22,48 +19,14 @@ const app = express();
 
 app.use(cors(corsOptions));
 
-const users = require("./api/users");
-const centers = require("./api/centers");
-const teachers = require("./api/teachers");
-const students = require("./api/students");
 const vehicles = require("./api/vehicles");
-const permissions = require("./api/permissions");
-const archings = require("./api/archings");
-const classTypes = require("./api/classTypes");
-const closures = require("./api/closures");
-const hows = require("./api/hows");
-const tariffs = require("./api/tariffs");
-const exams = require("./api/exams");
-const patterns = require("./api/patterns");
-const tests = require("./api/tests");
-const classes = require("./api/classes");
-const exportPdf = require("./api/export-pdf");
-const payments = require("./api/payments");
-const exitPoints = require("./api/exitPoints");
 
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use("/api/users", users);
-app.use("/api/centers", centers);
-app.use("/api/teachers", teachers);
-app.use("/api/students", students);
 app.use("/api/vehicles", vehicles);
-app.use("/api/permissions", permissions);
-app.use("/api/archings", archings);
-app.use("/api/classTypes", classTypes);
-app.use("/api/closures", closures);
-app.use("/api/hows", hows);
-app.use("/api/tariffs", tariffs);
-app.use("/api/exams", exams);
-app.use("/api/patterns", patterns);
-app.use("/api/tests", tests);
-app.use("/api/classes", classes);
-app.use("/api/export-pdf", exportPdf);
-app.use("/api/payments", payments);
-app.use("/api/exit-points", exitPoints);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

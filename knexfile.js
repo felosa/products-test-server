@@ -6,29 +6,9 @@ module.exports = {
     connection: {
       host: "127.0.0.1",
       user: "root",
-      password: "Escocia150416",
-      database: "autius",
+      password: "root",
+      database: "products-crud",
     },
   },
-  // staging
-  production: {
-    client: "mysql",
-    connection: {
-      host: "127.0.0.1",
-      port: "3306",
-      database: "autiuspruebas",
-      user: "autiuspruebas",
-      password: "desarrollo2020",
-    },
-  },
-  // production: {
-  //   client: "mysql",
-  //   connection: {
-  //     host: "127.0.0.1",
-  //     port: "3306",
-  //     database: "autius",
-  //     user: "autius",
-  //     password: "koEl86^6",
-  //   },
-  // },
+
 };
