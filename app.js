@@ -19,14 +19,14 @@ const app = express();
 
 app.use(cors(corsOptions));
 
-const vehicles = require("./api/vehicles");
+const products = require("./api/products");
 
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use("/api/vehicles", vehicles);
+app.use("/api/products", products);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

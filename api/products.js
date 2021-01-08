@@ -10,93 +10,33 @@ const knex = require("../db/knex"); //the connection
 
 const router = express.Router();
 
-// TODOS LOS VEHICULOS
+// ALL PRODUCTS
 router.get(
   "/",
-  [
-    query("centerID").optional(),
-    query("search").optional(),
-    query("orderBy").optional({ nullable: true }),
-    query("orderDir").isIn(["asc", "desc"]).optional({ nullable: true }),
-    query("perPage").isInt({ min: 1, max: 100 }).toInt().optional(),
-    query("page").isInt({ min: 1 }).toInt().optional(),
-    // query("firstName").optional(),
-    // query("lastName").optional(),
-    // query("jobTitle").optional(),
-    // query("companyName").optional(),
-    // query("countryName").optional(),
-    // query("countryID").optional(),
-    // query("regionName").optional(),
-    // query("regionID").optional(),
-  ],
+  [],
   async (req, res) => {
-    // HABRA QUE ANADIR FILTROS PARA FILTRAR POR CENTRO O SACAR TODOS
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
     }
 
-    var {
-      centerID = null,
-      orderBy = null,
-      orderDir = null,
-      perPage = 10,
-      page = 1,
-      // firstName = null,
-      // lastName = null,
-      // jobTitle = null,
-      // companyName = null,
-      // countryName = null,
-      // countryID = null,
-      // regionName = null,
-      // regionID = null,
-    } = req.query;
 
-    var getQuery = knex
-      .table("vehicles")
-      .orderBy("vehicles.created_at", "desc");
-    if (centerID) {
-      getQuery.where("vehicles.idCenter", centerID);
-    }
+    return knex
+      .table("products")
+      .orderBy("products.created_at", "desc")
+      .then(result => { return res.json(result) });
 
-    var totalCount = await getQuery
-      .clone()
-      .count("*", { as: "totalResults" })
-      .limit(999999)
-      .offset(0);
-
-    var results = await getQuery
-      .limit(perPage)
-      .offset((page - 1) * perPage)
-      .leftJoin("centers", "centers.id", "vehicles.idCenter")
-      .select(
-        "vehicles.id",
-        "vehicles.enrollment",
-        "vehicles.description",
-        "vehicles.itvDueDate",
-        "vehicles.insuranceDueDate",
-        "vehicles.nextPreventiveMaintenance",
-        "vehicles.idCenter",
-        "centers.name as centerName"
-      );
-
-    return res.json({
-      page: page || 1,
-      perPage: perPage || 10,
-      totalCount: totalCount[0].totalResults,
-      results: results,
-    });
   }
 );
 
-// GET ONE VEHICLE
+// GET ONE PRODUCT
 router.get(
-  "/:vehicleID",
-  [param("vehicleID").isInt().toInt()],
+  "/:productID",
+  [param("productID").isInt().toInt()],
   async (req, res) => {
     try {
-      const { vehicleID } = matchedData(req);
-      var vehicleQuery = knex("vehicles")
+      const { productID } = matchedData(req);
+      var productQuery = knex("products")
         .leftJoin("centers", "centers.id", "vehicles.idCenter")
         .select(
           "vehicles.id",
@@ -108,7 +48,7 @@ router.get(
           "vehicles.idCenter",
           "centers.name as centerName"
         )
-        .where("vehicles.id", vehicleID)
+        .where("products.id", productID)
         .first()
         .then((result) => {
           return res.json(result);
@@ -124,7 +64,7 @@ router.get(
   }
 );
 
-// CREAR VEHICLE
+// CREATE PRODUCT
 router.post(
   "/",
   [
@@ -143,7 +83,7 @@ router.post(
 
     const data = matchedData(req, { includeOptionals: true });
 
-    knex("vehicles")
+    knex("products")
       .insert({
         enrollment: data.enrollment,
         description: data.description,
@@ -163,7 +103,7 @@ router.post(
   }
 );
 
-// EDIT VEHICLE
+// EDIT PRODUCT
 router.post(
   "/:ID",
   [
@@ -183,7 +123,7 @@ router.post(
 
     const data = matchedData(req, { includeOptionals: true });
 
-    knex("vehicles")
+    knex("products")
       .update({
         enrollment: data.enrollment,
         description: data.description,
@@ -215,7 +155,7 @@ router.delete("/:ID", [param("ID").isInt().toInt()], (req, res) => {
 
   const { ID } = matchedData(req, { includeOptionals: true });
 
-  knex("vehicles")
+  knex("products")
     .where({
       id: ID,
     })

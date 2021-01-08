@@ -1,10 +1,10 @@
-exports.seed = function(knex) {
+exports.seed = function (knex) {
   // Deletes ALL existing entries
-  return knex("user")
+  return knex("products")
     .del()
-    .then(function() {
+    .then(function () {
       // Inserts seed entries
-      return knex("users").insert([
+      return knex("products").insert([
         {
           name: "Fernando",
           email: "fer@fer.com",
