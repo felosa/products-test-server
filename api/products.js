@@ -20,7 +20,6 @@ router.get(
       return res.status(422).json({ errors: errors.array() });
     }
 
-
     return knex
       .table("products")
       .orderBy("products.createdAt", "desc")
@@ -107,13 +106,13 @@ router.post(
 router.post(
   "/:ID",
   [
-  param("ID"),
-  body("name"),
-  body("type"),
-  body("price"),
-  body("expiryDate").toDate(),
-  body("description"),
-  body("country"),
+    param("ID"),
+    body("name"),
+    body("type"),
+    body("price"),
+    body("expiryDate").toDate(),
+    body("description"),
+    body("country"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -136,7 +135,7 @@ router.post(
       .where("id", data.ID)
       .then((result) => {
         if (result > 0) {
-          return res.send(`Updated`);
+          return res.send(`PRODUCT UPDATED`);
         }
         return res.status(404).send("Not found");
       })
@@ -162,9 +161,9 @@ router.delete("/:ID", [param("ID").isInt().toInt()], (req, res) => {
     .del()
     .then((value) => {
       if (value > 0) {
-        return res.send("OK");
+        return res.send("PRODUCT DELETED");
       }
-      return res.status(404).send("Not found");
+      return res.status(404).send("PRODUCT NOT FOUND");
     })
     .catch((error) => {
       return res.status(500).send(error);
