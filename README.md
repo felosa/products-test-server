@@ -9,7 +9,7 @@ INSTALL API.
    $ knex migrate:latest
    $ knex seed:run
 6. Run the app with nodemon.
-   & npm run dev
+   $ npm run dev
 
 END POINTS
 
