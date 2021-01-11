@@ -22,24 +22,24 @@ Create a new product:
 POST: http://localhost:8000/api/products
 
     The body should contain the object with this properties:
-    name
-    type
-    price
-    expiryDate
-    description
-    country
+    name - String
+    type - String
+    price - Number
+    expiryDate - Date
+    description - String
+    country - String
 
 Edit a product
 
 POST: http://localhost:8000/api/products/:ID
 
     The body should contain the object with this properties:
-    name
-    type
-    price
-    expiryDate
-    description
-    country
+    name - String
+    type - String
+    price - Number
+    expiryDate - Date
+    description - String
+    country - String
 
 Delete a product
 
